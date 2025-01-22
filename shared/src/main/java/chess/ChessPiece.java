@@ -69,8 +69,8 @@ public class ChessPiece {
 
 
 
-            case KNIGHT -> {
-            }
+            case KNIGHT ->
+                moves.addAll(new Knight().pieceMoves(board,myPosition));
             case ROOK->
                 moves.addAll(new Rook().pieceMoves(board,myPosition));
             case PAWN -> {
