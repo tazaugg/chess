@@ -1,6 +1,6 @@
 package chess;
 
-import chess.pieces.Bishop;
+import chess.pieces.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,14 +67,12 @@ public class ChessPiece {
             case BISHOP->
                 moves.addAll(new Bishop().pieceMoves(board,myPosition));
 
-            // Add cases for other piece types (KING, QUEEN, etc.)
 
-                // For simplicity, leave other pieces unimplemented for now
 
             case KNIGHT -> {
             }
-            case ROOK -> {
-            }
+            case ROOK->
+                moves.addAll(new Rook().pieceMoves(board,myPosition));
             case PAWN -> {
             }
         }
