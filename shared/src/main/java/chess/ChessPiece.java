@@ -62,8 +62,8 @@ public class ChessPiece {
         switch (piece.getPieceType()) {
             case KING -> {
             }
-            case QUEEN -> {
-            }
+            case QUEEN ->
+                moves.addAll(new Queen().pieceMoves(board,myPosition));
             case BISHOP->
                 moves.addAll(new Bishop().pieceMoves(board,myPosition));
 
