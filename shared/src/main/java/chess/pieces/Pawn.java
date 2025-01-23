@@ -23,13 +23,13 @@ public class Pawn implements ChessPieceMoves {
         }
 
         // Gather all valid moves for the pawn
-        validMoves.addAll(generateForwardMoves(board, position, moveDirection, isStartingPosition));
-        validMoves.addAll(generateCaptureMoves(board, position, moveDirection, piece));
+        validMoves.addAll(forwardMoves(board, position, moveDirection, isStartingPosition));
+        validMoves.addAll(captureMoves(board, position, moveDirection, piece));
 
         return validMoves;
     }
 
-    private Collection<ChessMove> generatePromotionMoves(ChessPosition start, ChessPosition end) {
+    private Collection<ChessMove> promotionMoves(ChessPosition start, ChessPosition end) {
         List<ChessMove> promotionMoves = new ArrayList<>();
         ChessPiece.PieceType[] promotionTypes = {ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.ROOK, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT};
 
@@ -39,7 +39,7 @@ public class Pawn implements ChessPieceMoves {
         return promotionMoves;
     }
 
-    private Collection<ChessMove> generateForwardMoves(ChessBoard board, ChessPosition position, int direction, boolean isStartingPosition) {
+    private Collection<ChessMove> forwardMoves(ChessBoard board, ChessPosition position, int direction, boolean isStartingPosition) {
         List<ChessMove> forwardMoves = new ArrayList<>();
         int newRow = position.getRow() + direction;
         int column = position.getColumn();
@@ -52,11 +52,11 @@ public class Pawn implements ChessPieceMoves {
             if (nextPiece == null) {
                 // If reaching the promotion row
                 if (newRow == 1 || newRow == 8) {
-                    forwardMoves.addAll(generatePromotionMoves(position, nextPosition));
+                    forwardMoves.addAll(promotionMoves(position, nextPosition));
                 } else {
                     forwardMoves.add(new ChessMove(position, nextPosition, null));
                     if (isStartingPosition) {
-                        forwardMoves.addAll(generateForwardMoves(board, position, direction * 2, false)); // Double step on first move
+                        forwardMoves.addAll(forwardMoves(board, position, direction * 2, false)); // Double step on first move
                     }
                 }
             }
@@ -64,7 +64,7 @@ public class Pawn implements ChessPieceMoves {
         return forwardMoves;
     }
 
-    private Collection<ChessMove> generateCaptureMoves(ChessBoard board, ChessPosition position, int direction, ChessPiece piece) {
+    private Collection<ChessMove> captureMoves(ChessBoard board, ChessPosition position, int direction, ChessPiece piece) {
         List<ChessMove> captureMoves = new ArrayList<>();
         int newRow = position.getRow() + direction;
 
@@ -79,7 +79,7 @@ public class Pawn implements ChessPieceMoves {
                 ChessPiece targetPiece = board.getPiece(nextPosition);
                 if (targetPiece != null && targetPiece.getTeamColor() != piece.getTeamColor()) {
                     if (newRow == 1 || newRow == 8) {
-                        captureMoves.addAll(generatePromotionMoves(position, nextPosition));
+                        captureMoves.addAll(promotionMoves(position, nextPosition));
                     } else {
                         captureMoves.add(new ChessMove(position, nextPosition, null));
                     }
