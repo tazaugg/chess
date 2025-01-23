@@ -31,7 +31,8 @@ public class Pawn implements ChessPieceMoves {
 
     private Collection<ChessMove> promotionMoves(ChessPosition start, ChessPosition end) {
         List<ChessMove> promotionMoves = new ArrayList<>();
-        ChessPiece.PieceType[] promotionTypes = {ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.ROOK, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT};
+        ChessPiece.PieceType[] promotionTypes =
+                {ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.ROOK, ChessPiece.PieceType.BISHOP, ChessPiece.PieceType.KNIGHT};
 
         for (ChessPiece.PieceType type : promotionTypes) {
             promotionMoves.add(new ChessMove(start, end, type));
