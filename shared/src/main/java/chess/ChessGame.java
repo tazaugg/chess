@@ -1,9 +1,6 @@
 package chess;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -13,11 +10,12 @@ import java.util.ArrayList;
  */
 public class ChessGame {
     private ChessBoard board;
-    private TeamColor currentTurn;
+    private TeamColor currentTeam;
     public ChessGame() {
-        this.board = new ChessBoard();
-        this.board.resetBoard();
-        this.currentTurn = TeamColor.WHITE;
+        board = new ChessBoard();
+        board.resetBoard();
+        currentTeam = TeamColor.WHITE;
+
 
     }
 
@@ -25,7 +23,7 @@ public class ChessGame {
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        return currentTurn;
+        return currentTeam;
     }
 
     /**
@@ -34,7 +32,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        this.currentTurn = team;
+        this.currentTeam = team;
     }
 
     /**
@@ -52,9 +50,33 @@ public class ChessGame {
      * @return Set of valid moves for requested piece, or null if no piece at
      * startPosition
      */
+
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) return null; // No piece at this position
+
+        Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
+        List<ChessMove> legalMoves = new ArrayList<>();
+
+        // Filter moves that do not leave the king in check
+        for (ChessMove move : possibleMoves) {
+            if (!wouldLeaveKingInCheck(piece.getTeamColor(), move)) {
+                legalMoves.add(move);
+            }
+        }
+
+        return legalMoves;
+
     }
+    private boolean wouldLeaveKingInCheck(TeamColor team, ChessMove move) {
+        // Simulate the move on a temporary board
+        ChessBoard tempBoard = copyBoard();
+        tempBoard.addPiece(move.getEndPosition(), tempBoard.getPiece(move.getStartPosition()));
+        tempBoard.addPiece(move.getStartPosition(), null);
+
+        return isInCheck(team, tempBoard);
+    }
+
 
     /**
      * Makes a move in a chess game
@@ -73,8 +95,29 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        return isInCheck(teamColor, board);
     }
+    private boolean isInCheck(TeamColor teamColor, ChessBoard boardState) {
+        ChessPosition kingPosition = findKing(teamColor, boardState);
+        if (kingPosition == null) return false; // Should never happen in a valid game
+
+        // Check if any opponent's piece can attack the king
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = boardState.getPiece(pos);
+                if (piece != null && piece.getTeamColor() != teamColor) {
+                    for (ChessMove move : piece.pieceMoves(boardState, pos)) {
+                        if (move.getEndPosition().equals(kingPosition)) {
+                            return true; // King is under attack
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Determines if the given team is in checkmate
@@ -84,6 +127,31 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
         throw new RuntimeException("Not implemented");
+    }
+    private ChessPosition findKing(TeamColor team, ChessBoard boardState) {
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = boardState.getPiece(pos);
+                if (piece != null && piece.getTeamColor() == team && piece.getPieceType() == ChessPiece.PieceType.KING) {
+                    return pos;
+                }
+            }
+        }
+        return null;
+    }
+    private ChessBoard copyBoard() {
+        ChessBoard newBoard = new ChessBoard();
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition pos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(pos);
+                if (piece != null) {
+                    newBoard.addPiece(pos, new ChessPiece(piece.getTeamColor(), piece.getPieceType()));
+                }
+            }
+        }
+        return newBoard;
     }
 
     /**
@@ -103,6 +171,9 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
+        if (board == null) {
+            throw new IllegalArgumentException("Board cannot be null");
+        }
         this.board = board;
     }
 
