@@ -22,6 +22,7 @@ public class ChessGame {
     /**
      * @return Which team's turn it is
      */
+
     public TeamColor getTeamTurn() {
         return currentTeam;
     }
@@ -85,7 +86,51 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) {
+            throw new InvalidMoveException("No piece at the start position.");
+        }
+        if (piece.getTeamColor() != currentTeam) {
+            throw new InvalidMoveException("Piece is not in this team.");
+        }
+        Collection<ChessMove> legalMoves = validMoves(startPosition);
+        if (legalMoves == null || legalMoves.isEmpty()) {
+            throw new InvalidMoveException("No valid move.");
+        }
+
+        ChessBoard tempBoard = copyBoard();
+        tempBoard.addPiece(endPosition, piece);
+        tempBoard.addPiece(startPosition, null);
+
+        if (isInCheck(currentTeam, tempBoard)) {
+            throw new InvalidMoveException("Move puts player in check.");
+        }
+        if (piece.getPieceType()== ChessPiece.PieceType.PAWN){
+            int startRow = startPosition.getRow();
+            int startCol = startPosition.getColumn();
+            int endRow = endPosition.getRow();
+            int endCol = endPosition.getColumn();
+            if (Math.abs(endRow-startRow)==2||Math.abs(endRow-startRow)==-2){
+                if ((piece.getTeamColor()==TeamColor.WHITE && startRow !=2)||
+                (piece.getTeamColor()==TeamColor.BLACK && startCol !=7)){
+                    throw new InvalidMoveException("Pawn cannot move two after it has moved");
+                }
+            }
+        }
+        board.addPiece(endPosition, piece);
+        board.addPiece(startPosition, null);
+
+        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && (endPosition.getRow() == 1 || endPosition.getRow() == 8)) {
+            ChessPiece.PieceType promotionType = move.getPromotionPiece();
+            if (promotionType == null) {
+                promotionType = ChessPiece.PieceType.QUEEN;
+            }
+            board.addPiece(endPosition, new ChessPiece(piece.getTeamColor(), promotionType));
+        }
+        currentTeam = (currentTeam == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
     /**
