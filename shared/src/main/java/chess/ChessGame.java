@@ -113,10 +113,15 @@ public class ChessGame {
             int startCol = startPosition.getColumn();
             int endRow = endPosition.getRow();
             int endCol = endPosition.getColumn();
+            ChessPiece targetPiece = board.getPiece(move.getEndPosition());
+
             if (Math.abs(endRow-startRow)==2||Math.abs(endRow-startRow)==-2){
                 if ((piece.getTeamColor()==TeamColor.WHITE && startRow !=2)||
                 (piece.getTeamColor()==TeamColor.BLACK && startCol !=7)){
                     throw new InvalidMoveException("Pawn cannot move two after it has moved");
+                }
+                if (Math.abs(startCol - endCol) == 1 && targetPiece == null) {
+                    throw new InvalidMoveException("Pawn cannot move diagonally unless capturing.");
                 }
             }
         }
