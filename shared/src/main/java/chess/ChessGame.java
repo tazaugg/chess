@@ -88,12 +88,6 @@ public class ChessGame {
             }
         }
 
-        //en Passant
-        // if chessPiece.pieceType() == PAWN
-        // if ChessPiece.pieceType (left and then right) == PAWN check if it was the pawn that made the last move,
-        // and that it has a difference of 2 spaces in rank
-        // if the pawn moved 2 positions in rank then enpassant is valid in that direction
-        // assuming it doesn't put/keep the king in check
         int direction = piece.getTeamColor() == TeamColor.WHITE ? 1 : -1;
 
         int newRow = startPosition.getRow() + direction;
