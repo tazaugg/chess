@@ -57,7 +57,9 @@ public class ChessGame {
 
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
-        if (piece == null) return null;
+        if (piece == null) {
+            return null;
+        }
 
         Collection<ChessMove> possibleMoves = piece.pieceMoves(board, startPosition);
         List<ChessMove> legalMoves = new ArrayList<>();
@@ -161,7 +163,8 @@ public class ChessGame {
             board.addPiece(endPosition, piece);
             board.addPiece(startPosition, null);
             if (piece.getPieceType() == ChessPiece.PieceType.PAWN && (endPosition.getRow() == 1 || endPosition.getRow() == 8)) {
-                board.addPiece(endPosition, new ChessPiece(piece.getTeamColor(), move.getPromotionPiece() != null ? move.getPromotionPiece() : ChessPiece.PieceType.QUEEN));
+                board.addPiece(endPosition, new ChessPiece(piece.getTeamColor(),
+                        move.getPromotionPiece() != null ? move.getPromotionPiece() : ChessPiece.PieceType.QUEEN));
             }
         }
         lastMove = move;
@@ -259,19 +262,24 @@ public class ChessGame {
     }
     private boolean isInCheck(TeamColor teamColor, ChessBoard boardState) {
         ChessPosition kingPosition = findKing(teamColor, boardState);
-        if (kingPosition == null) return false;
-
+        if (kingPosition == null){
+            return false;
+        }
+        List<ChessMove> opposingMoves = new ArrayList<>();
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPosition pos = new ChessPosition(row, col);
                 ChessPiece piece = boardState.getPiece(pos);
                 if (piece != null && piece.getTeamColor() != teamColor) {
-                    for (ChessMove move : piece.pieceMoves(boardState, pos)) {
-                        if (move.getEndPosition().equals(kingPosition)) {
-                            return true;
-                        }
-                    }
+                    opposingMoves.addAll(piece.pieceMoves(boardState, pos));
                 }
+            }
+        }
+        Iterator<ChessMove> iterator = opposingMoves.iterator();
+        while (iterator.hasNext()) {
+            ChessMove move = iterator.next();
+            if(move.getEndPosition().equals(kingPosition)){
+                return true;
             }
         }
         return false;
@@ -367,7 +375,8 @@ public class ChessGame {
             return false;
         }
         ChessGame chessGame = (ChessGame) o;
-        return Objects.equals(board, chessGame.board) && currentTeam == chessGame.currentTeam && Objects.equals(lastMove, chessGame.lastMove) && Objects.equals(movedPieces, chessGame.movedPieces);
+        return Objects.equals(board, chessGame.board) && currentTeam == chessGame.currentTeam &&
+                Objects.equals(lastMove, chessGame.lastMove) && Objects.equals(movedPieces, chessGame.movedPieces);
     }
 
     @Override
