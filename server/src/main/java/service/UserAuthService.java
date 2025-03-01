@@ -23,6 +23,24 @@ public class UserAuthService {
         return authData;
     }
 
+    public AuthData loginUser(UserData userData) throws DataAccessException {
+        if (!userDAO.authUser(userData.username(), userData.password())) {
+            throw new DataAccessException("Invalid login attempt");
+        }
+        String newAuthToken = UUID.randomUUID().toString();
+        AuthData authRecord = new AuthData(userData.username(), newAuthToken);
+        authDAO.addAuth(authRecord);
+        return authRecord;
+    }
+
+    public void logoutUser(String authToken) throws DataAccessException {
+        if (authDAO.getAuth(authToken) == null) {
+            throw new DataAccessException("Unauthorized logout attempt");
+        }
+        authDAO.deleteAuth(authToken);
+    }
+
+
 
     public void clear() {
         userDAO.clear();

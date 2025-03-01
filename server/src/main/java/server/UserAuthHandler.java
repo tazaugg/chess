@@ -42,7 +42,35 @@ public class UserAuthHandler {
     }
 
     public Object login(Request req, Response resp) {
-        // TODO: Implement login logic
-        return null;
+        try {
+            UserData credentials = new Gson().fromJson(req.body(), UserData.class);
+            AuthData authToken = authService.loginUser(credentials);
+            resp.status(200);
+            return new Gson().toJson(authToken);
+        } catch (DataAccessException e) {
+            resp.status(401);
+            return "{ \"message\": \"Error: invalid credentials\" }";
+        } catch (JsonSyntaxException e) {
+            resp.status(400);
+            return "{ \"message\": \"Error: bad request format\" }";
+        } catch (Exception e) {
+            resp.status(500);
+            return "{ \"message\": \"Error: unexpected server issue\" }";
+        }
+    }
+
+    public Object logout(Request req, Response resp) {
+        try {
+            String token = req.headers("authorization");
+            authService.logoutUser(token);
+            resp.status(200);
+            return "{}";
+        } catch (DataAccessException e) {
+            resp.status(401);
+            return "{ \"message\": \"Error: unauthorized request\" }";
+        } catch (Exception e) {
+            resp.status(500);
+            return "{ \"message\": \"Error: unexpected server issue\" }";
+        }
     }
 }

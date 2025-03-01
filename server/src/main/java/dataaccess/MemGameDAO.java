@@ -41,6 +41,17 @@ public class MemGameDAO implements GameDAO {
     }
 
     @Override
+    public boolean gameExists(int gameID) {
+        return gameStorage.stream().anyMatch(game -> game.gameID() == gameID);
+    }
+
+    @Override
+    public void updateGame(GameData updatedGame) {
+        gameStorage.removeIf(game -> game.gameID() == updatedGame.gameID());
+        gameStorage.add(updatedGame);
+    }
+
+    @Override
     public void clear() {
         gameStorage.clear();
     }

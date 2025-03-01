@@ -24,7 +24,7 @@ public class Server {
         gameDAO = new MemGameDAO();
 
         userAuthService = new UserAuthService(userDAO, authDAO);
-        gameService = new GameService(gameDAO);
+        gameService = new GameService(gameDAO,authDAO);
 
         userAuthHandler = new UserAuthHandler(userAuthService);
         gameHandler = new GameHandler(gameService);
@@ -39,6 +39,13 @@ public class Server {
         // Register your endpoints and handle exceptions here.
         Spark.post("/user", userAuthHandler::register);
         Spark.delete("/db", this::clear);
+
+        Spark.post("/session", userAuthHandler::login);
+        Spark.delete("/session", userAuthHandler::logout);
+
+        Spark.get("/game", gameHandler::listGames);
+        Spark.post("/game", gameHandler::createGame);
+        Spark.put("/game", gameHandler::joinGame);
 
         //This line initializes the server and can be removed once you have a functioning endpoint
         Spark.init();
