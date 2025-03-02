@@ -5,6 +5,7 @@ import dataaccess.DataAccessException;
 import dataaccess.UnauthExcept;
 import model.GameData;
 import service.GameService;
+import service.RespExp;
 import spark.Request;
 import spark.Response;
 
@@ -18,67 +19,40 @@ public class GameHandler {
         this.gameService = gameService;
     }
 
-    public Object listGames(Request req, Response resp) {
-        try {
-            String authToken = req.headers("authorization");
-            Set<GameData> availableGames = gameService.listGames(authToken);
-            resp.status(200);
-            return new Gson().toJson(new GameListResponse(availableGames));
-        } catch (DataAccessException e) {
-            resp.status(401);
-            return errorResponse("Error: unauthorized");
-        } catch (Exception e) {
-            resp.status(500);
-            return errorResponse("Error: " + e.getMessage());
-        }
+    public Object listGames(Request req, Response resp) throws RespExp {
+        String authToken = req.headers("authorization");
+        Set<GameData> availableGames = gameService.listGames(authToken);
+        resp.status(200);
+        return new Gson().toJson(new GameListResponse(availableGames));
+
     }
 
-    public Object createGame(Request req, Response resp) {
+    public Object createGame(Request req, Response resp) throws RespExp{
         if (!req.body().contains("\"gameName\":")) {
             resp.status(400);
             return errorResponse("Error: bad request");
         }
+        String authToken = req.headers("authorization");
+        int newGameID = gameService.createGame(authToken, "hi");
+        resp.status(200);
+        return new Gson().toJson(new GameIDResponse(newGameID));
 
-        try {
-            String authToken = req.headers("authorization");
-            int newGameID = gameService.createGame(authToken);
-            resp.status(200);
-            return new Gson().toJson(new GameIDResponse(newGameID));
-        } catch (DataAccessException e) {
-            resp.status(401);
-            return errorResponse("Error: unauthorized");
-        } catch (Exception e) {
-            resp.status(500);
-            return errorResponse("Error: " + e.getMessage());
-        }
     }
 
-    public Object joinGame(Request req, Response resp) {
+    public Object joinGame(Request req, Response resp) throws RespExp {
         if (!req.body().contains("\"gameID\":")) {
             resp.status(400);
-            return errorResponse("Error: bad request");
+            throw new RespExp(400,"Error: bad request");
         }
+        String authToken = req.headers("authorization");
+        JoinRequest joinRequest = new Gson().fromJson(req.body(), JoinRequest.class);
+        int joinResult = gameService.joinGame(authToken, joinRequest.gameID(), joinRequest.playerColor());
 
-        try {
-            String authToken = req.headers("authorization");
-            JoinRequest joinRequest = new Gson().fromJson(req.body(), JoinRequest.class);
-            int joinResult = gameService.joinGame(authToken, joinRequest.gameID(), joinRequest.playerColor());
+        return handleJoinGameResponse(joinResult, resp);
 
-            return handleJoinGameResponse(joinResult, resp);
-
-        } catch (DataAccessException e) {
-            resp.status(400);
-            return errorResponse("Error: bad request");
-        } catch (UnauthExcept e) {
-            resp.status(401);
-            return errorResponse("Error: unauthorized");
-        } catch (Exception e) {
-            resp.status(500);
-            return errorResponse("Error: " + e.getMessage());
-        }
     }
 
-    private Object handleJoinGameResponse(int result, Response resp) {
+    private Object handleJoinGameResponse(int result, Response resp) throws RespExp {
         switch (result) {
             case 0:
                 resp.status(200);

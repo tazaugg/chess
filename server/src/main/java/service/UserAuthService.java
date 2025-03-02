@@ -48,10 +48,6 @@ public class UserAuthService {
                throw new RespExp(401, "Error: Invalid login attempt");
            }
 
-
-
-
-
        }
        catch(DataAccessException e){
            throw new RespExp(500, e.getMessage());

@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MemGameDAO implements GameDAO {
+    private int gameNum = 1;
 
     private HashSet<GameData> gameStorage;
 
@@ -16,17 +17,17 @@ public class MemGameDAO implements GameDAO {
     }
 
     @Override
-    public HashSet<GameData> listGames(String username) {
-        return gameStorage.stream()
-                .filter(game -> username.equals(game.whiteUsername()) || username.equals(game.blackUsername()))
-                .collect(Collectors.toCollection(HashSet::new));
+    public HashSet<GameData> listGames() {
+        return gameStorage;
     }
 
 
 
     @Override
-    public void createGame(GameData game) {
+    public int createGame(GameData game) {
+        game = new GameData(gameNum++, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
         gameStorage.add(game);
+        return game.gameID();
     }
 
     @Override

@@ -1,9 +1,11 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.*;
 import model.*;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GameService {
@@ -15,54 +17,71 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    public HashSet<GameData> listGames(String authToken) throws DataAccessException {
-        if (authDAO.getAuth(authToken) == null) {
-            throw new DataAccessException("Unauthorized access");
+    public HashSet<GameData> listGames(String authToken) throws RespExp {
+        try{
+            if (authDAO.getAuth(authToken) == null) {
+                throw new RespExp(401, "Error: Unauthorized access");
+            }
+            return gameDAO.listGames();
         }
-        return gameDAO.listGames(authToken);
+        catch (DataAccessException e) {
+            throw new RespExp(500, "Error" + e.getMessage());
+        }
     }
 
-    public int createGame(String authToken) throws DataAccessException {
-        if (authDAO.getAuth(authToken) == null) {
-            throw new DataAccessException("Invalid authentication");
-        }
+    public int createGame(String authToken, String gameName) throws RespExp {
+       try{
+           if (authDAO.getAuth(authToken) == null) {
+               throw new RespExp(401, "Error: Invalid authentication");
+           }
+           HashSet<GameData> games = gameDAO.listGames();
+           Iterator<GameData> iter = games.iterator();
+           while(iter.hasNext()) {
+               GameData game = iter.next();
+               if(game.gameName().equals(gameName)) {
+                   throw new RespExp(400, "Error: bad request");
+               }
+           }
 
-        int newGameID;
-        do {
-            newGameID = ThreadLocalRandom.current().nextInt(1, 10000);
-        } while (gameDAO.gameExists(newGameID));
-
-        GameData newGame = new GameData(newGameID, null, null, null, null);
-        gameDAO.createGame(newGame);
-        return newGameID;
+           GameData newGame = new GameData(0, null, null, gameName, new ChessGame());
+           return gameDAO.createGame(newGame);
+       }
+       catch (DataAccessException e) {
+           throw new RespExp(500, "Error" + e.getMessage());
+       }
     }
 
-    public int joinGame(String authToken, int gameID, String color) throws UnauthExcept, DataAccessException {
-        AuthData userAuth = authDAO.getAuth(authToken);
-        if (userAuth == null) {
-            throw new UnauthExcept("Invalid token provided");
+    public int joinGame(String authToken, int gameID, String color) throws RespExp {
+        try{
+            AuthData userAuth = authDAO.getAuth(authToken);
+            if (userAuth == null) {
+                throw new RespExp(401, "Error: Invalid token provided");
+            }
+
+            if (!gameDAO.gameExists(gameID)) {
+                throw new RespExp(400, "Error: bad request");// Game does not exist
+            }
+
+            GameData currentGame = gameDAO.getGame(gameID);
+            String whitePlayer = currentGame.whiteUsername();
+            String blackPlayer = currentGame.blackUsername();
+
+            if ("WHITE".equalsIgnoreCase(color)) {
+                if (whitePlayer != null) throw new RespExp(403, "Error: already taken"); // Already taken
+                whitePlayer = userAuth.username();
+            } else if ("BLACK".equalsIgnoreCase(color)) {
+                if (blackPlayer != null) throw new RespExp(403, "Error: already taken"); // Already taken
+                blackPlayer = userAuth.username();
+            } else  {
+                throw new RespExp(400, "Error: bad request"); // Invalid request
+            }
+
+            gameDAO.updateGame(new GameData(gameID, whitePlayer, blackPlayer, currentGame.gameName(), currentGame.game()));
+            return 0;
         }
-
-        if (!gameDAO.gameExists(gameID)) {
-            return 1; // Game does not exist
+        catch (DataAccessException e) {
+            throw new RespExp(500, "Error: " + e.getMessage());
         }
-
-        GameData currentGame = gameDAO.getGame(gameID);
-        String whitePlayer = currentGame.whiteUsername();
-        String blackPlayer = currentGame.blackUsername();
-
-        if ("WHITE".equals(color)) {
-            if (whitePlayer != null) return 2; // Already taken
-            whitePlayer = userAuth.username();
-        } else if ("BLACK".equals(color)) {
-            if (blackPlayer != null) return 2; // Already taken
-            blackPlayer = userAuth.username();
-        } else if (color != null) {
-            return 1; // Invalid request
-        }
-
-        gameDAO.updateGame(new GameData(gameID, whitePlayer, blackPlayer, currentGame.gameName(), currentGame.game()));
-        return 0;
     }
 
     public void clear() throws RespExp {

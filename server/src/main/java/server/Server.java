@@ -1,6 +1,5 @@
 package server;
 
-import com.google.gson.Gson;
 import dataaccess.*;
 import spark.*;
 import service.*;
@@ -57,7 +56,7 @@ public class Server {
     }
 
     private void exceptionHandler(RespExp exp, Request req, Response res) {
-        res.status(exp.StatusCode());
+        res.status(exp.statusCode());
         res.body(exp.toJson());
     }
 
