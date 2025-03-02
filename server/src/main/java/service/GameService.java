@@ -87,6 +87,7 @@ public class GameService {
     public void clear() throws RespExp {
         try{
             gameDAO.clear();
+            authDAO.clear();
         }
         catch(DataAccessException e){
             throw new RespExp(500, "Error" + e.getMessage());
