@@ -22,7 +22,7 @@ public class MemUserDAO implements UserDAO {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-
+        userStorage.add(user);
     }
 
 

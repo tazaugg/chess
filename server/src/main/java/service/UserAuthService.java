@@ -24,9 +24,9 @@ public class UserAuthService {
             AuthData authData = new AuthData(userData.username(), authToken);
 
             userDAO.createUser(userData);
-            authDAO.addAuth(authData);
 
-            return authData;
+
+            return authDAO.addAuth(authData);
 
         }
         catch(DataAccessException e){
@@ -39,14 +39,18 @@ public class UserAuthService {
        try{
            UserData gotUser = userDAO.getUser(userData.username());
 
-           if (gotUser == null || !gotUser.password().equals(userData.password())) {
+           if (gotUser != null && gotUser.password().equals(userData.password())) {
+               String newAuthToken = UUID.randomUUID().toString();
+               AuthData authRecord = new AuthData(userData.username(), newAuthToken);
+               return  authDAO.addAuth(authRecord);
+           }
+           else{
                throw new RespExp(401, "Error: Invalid login attempt");
            }
 
-           String newAuthToken = UUID.randomUUID().toString();
-           AuthData authRecord = new AuthData(userData.username(), newAuthToken);
-           authDAO.addAuth(authRecord);
-           return authRecord;
+
+
+
 
        }
        catch(DataAccessException e){

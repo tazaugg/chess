@@ -4,6 +4,7 @@ import model.AuthData;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class MemAuthDAO implements AuthDAO {
 
@@ -19,8 +20,10 @@ public class MemAuthDAO implements AuthDAO {
     }
 
     @Override
-    public void addAuth(AuthData authData) {
+    public AuthData addAuth(AuthData authData) {
+        authData=new AuthData(authData.username(), UUID.randomUUID().toString());
         authStorage.add(authData);
+        return authData;
     }
 
     @Override
