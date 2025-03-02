@@ -9,6 +9,7 @@ import service.RespExp;
 import spark.Request;
 import spark.Response;
 
+import java.util.Collection;
 import java.util.Set;
 
 public class GameHandler {
@@ -21,9 +22,10 @@ public class GameHandler {
 
     public Object listGames(Request req, Response resp) throws RespExp {
         String authToken = req.headers("authorization");
-        Set<GameData> availableGames = gameService.listGames(authToken);
+        GameListResponse availableGames = new GameListResponse(gameService.listGames(authToken));
         resp.status(200);
-        return new Gson().toJson(new GameListResponse(availableGames));
+        resp.body(new Gson().toJson(availableGames));
+        return resp.body();
 
     }
 
@@ -33,7 +35,9 @@ public class GameHandler {
             return errorResponse("Error: bad request");
         }
         String authToken = req.headers("authorization");
-        int newGameID = gameService.createGame(authToken, "hi");
+        GameData gameData = new Gson().fromJson(req.body(), GameData.class);
+
+        int newGameID = gameService.createGame(authToken, gameData.gameName());
         resp.status(200);
         return new Gson().toJson(new GameIDResponse(newGameID));
 
@@ -73,7 +77,7 @@ public class GameHandler {
         return "{ \"message\": \"" + message + "\" }";
     }
 
-    private record GameListResponse(Set<GameData> games) {}
+    private record GameListResponse(Collection<GameData> games) {}
 
     private record GameIDResponse(int gameID) {}
 

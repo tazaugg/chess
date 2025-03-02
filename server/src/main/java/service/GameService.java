@@ -4,6 +4,7 @@ import chess.ChessGame;
 import dataaccess.*;
 import model.*;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,7 +18,7 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    public HashSet<GameData> listGames(String authToken) throws RespExp {
+    public Collection<GameData> listGames(String authToken) throws RespExp {
         try{
             if (authDAO.getAuth(authToken) == null) {
                 throw new RespExp(401, "Error: Unauthorized access");
@@ -34,7 +35,7 @@ public class GameService {
            if (authDAO.getAuth(authToken) == null) {
                throw new RespExp(401, "Error: Invalid authentication");
            }
-           HashSet<GameData> games = gameDAO.listGames();
+           Collection<GameData> games = gameDAO.listGames();
            Iterator<GameData> iter = games.iterator();
            while(iter.hasNext()) {
                GameData game = iter.next();
@@ -44,7 +45,7 @@ public class GameService {
            }
 
            GameData newGame = new GameData(0, null, null, gameName, new ChessGame());
-           return gameDAO.createGame(newGame);
+           return gameDAO.createGame(newGame).gameID();
        }
        catch (DataAccessException e) {
            throw new RespExp(500, "Error" + e.getMessage());
