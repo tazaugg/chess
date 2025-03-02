@@ -5,6 +5,7 @@ import com.google.gson.JsonSyntaxException;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.UserData;
+import service.RespExp;
 import service.UserAuthService;
 import spark.Request;
 import spark.Response;
@@ -17,42 +18,33 @@ public class UserAuthHandler {
         this.authService = authService;
     }
 
-    public Object register(Request req, Response resp) {
-        try {
-            UserData userData = new Gson().fromJson(req.body(), UserData.class);
-
-
+    public Object register(Request req, Response resp) throws RespExp{
+        UserData userData = new Gson().fromJson(req.body(), UserData.class);
+        if(userData.username() == null || userData.password() == null || userData.email() == null){
+            resp.status(400);
+            throw new RespExp(400, "Error: bad request");
+        }
+        else{
             AuthData authData = authService.createUser(userData);
             resp.status(200);
-            return new Gson().toJson(authData);
+            resp.body(new Gson().toJson(authData));
 
-        } catch (DataAccessException e) {
-            resp.status(403);
-            return "{ \"message\": \"Error: already taken\" }";
-
-        } catch (JsonSyntaxException e) {
-            resp.status(400);
-            return "{ \"message\": \"Error: bad request\" }";
-
-        } catch (Exception e) {
-            resp.status(500);
-            return "{ \"message\": \"Error: %s\" }".formatted(e.getMessage());
         }
+        return resp.body();
     }
 
-    public Object login(Request req, Response resp) {
-        try {
-            UserData credentials = new Gson().fromJson(req.body(), UserData.class);
+    public Object login(Request req, Response resp) throws RespExp {
+        UserData credentials = new Gson().fromJson(req.body(), UserData.class);
+        if(credentials.username() == null || credentials.password() == null) {
+            resp.status(401);
+            throw new RespExp(401, "Error: unauthorized");
+        }
+        else{
             AuthData authToken = authService.loginUser(credentials);
             resp.status(200);
-            return new Gson().toJson(authToken);
-        } catch (DataAccessException e) {
-            resp.status(401);
-            return "{ \"message\": \"Error: unauthorized\" }";
-        } catch (Exception e) {
-            resp.status(500);
-            return "{ \"message\": \"Error: %s\" }".formatted(e.getMessage());
+            resp.body(new Gson().toJson(authToken));
         }
+        return resp.body();
     }
 
     public Object logout(Request req, Response resp) {

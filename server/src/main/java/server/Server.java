@@ -47,6 +47,8 @@ public class Server {
         Spark.post("/game", gameHandler::createGame);
         Spark.put("/game", gameHandler::joinGame);
 
+        Spark.exception(RespExp.class, this::exceptionHandler);
+
         //This line initializes the server and can be removed once you have a functioning endpoint
         Spark.init();
 
@@ -54,23 +56,22 @@ public class Server {
         return Spark.port();
     }
 
+    private void exceptionHandler(RespExp exp, Request req, Response res) {
+        res.status(exp.StatusCode());
+        res.body(exp.toJson());
+    }
+
     public void stop() {
         Spark.stop();
         Spark.awaitStop();
     }
-    private Object clear(Request req, Response resp) {
+    private Object clear(Request req, Response resp) throws RespExp {
+        userAuthService.clear();
+        gameService.clear();
 
-        try {
-            userAuthService.clear();
-            gameService.clear();
+        resp.status(200);
+        return "";
 
-            resp.status(200);
-            return "{}";
-        }
-        catch (Exception e) {
-            resp.status(500);
-            return "{ \"message\": \"Error: %s\"}".formatted(new Gson().toJson(e.getMessage()));
-        }
 
 
     }

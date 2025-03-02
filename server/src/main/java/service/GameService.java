@@ -65,7 +65,12 @@ public class GameService {
         return 0;
     }
 
-    public void clear() {
-        gameDAO.clear();
+    public void clear() throws RespExp {
+        try{
+            gameDAO.clear();
+        }
+        catch(DataAccessException e){
+            throw new RespExp(500, "Error" + e.getMessage());
+        }
     }
 }

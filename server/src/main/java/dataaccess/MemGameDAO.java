@@ -22,10 +22,7 @@ public class MemGameDAO implements GameDAO {
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    @Override
-    public void createGame(int gameID, String whiteUsername, String blackUsername, String gameName, ChessGame game) {
-        gameStorage.add(new GameData(gameID, whiteUsername, blackUsername, gameName, game));
-    }
+
 
     @Override
     public void createGame(GameData game) {
@@ -52,7 +49,7 @@ public class MemGameDAO implements GameDAO {
     }
 
     @Override
-    public void clear() {
+    public void clear() throws DataAccessException{
         gameStorage.clear();
     }
 }

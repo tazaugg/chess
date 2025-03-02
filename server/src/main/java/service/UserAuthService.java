@@ -14,37 +14,63 @@ public class UserAuthService {
         this.authDAO = authDAO;
     }
 
-    public AuthData createUser(UserData userData) throws DataAccessException {
-        String authToken = UUID.randomUUID().toString();
-        AuthData authData = new AuthData(userData.username(), authToken);
+    public AuthData createUser(UserData userData) throws RespExp {
+        try{
+            UserData gotUser = userDAO.getUser(userData.username());
+            if(gotUser != null){
+                throw new RespExp(403, "Error: already taken");
+            }
+            String authToken = UUID.randomUUID().toString();
+            AuthData authData = new AuthData(userData.username(), authToken);
 
-        userDAO.createUser(userData);
-        authDAO.addAuth(authData);
+            userDAO.createUser(userData);
+            authDAO.addAuth(authData);
 
-        return authData;
+            return authData;
+
+        }
+        catch(DataAccessException e){
+            throw new RespExp(500, "Error" + e.getMessage());
+        }
+
     }
 
-    public AuthData loginUser(UserData userData) throws DataAccessException {
-        if (!userDAO.authUser(userData.username(), userData.password())) {
-            throw new DataAccessException("Invalid login attempt");
-        }
-        String newAuthToken = UUID.randomUUID().toString();
-        AuthData authRecord = new AuthData(userData.username(), newAuthToken);
-        authDAO.addAuth(authRecord);
-        return authRecord;
+    public AuthData loginUser(UserData userData) throws RespExp {
+       try{
+           UserData gotUser = userDAO.getUser(userData.username());
+
+           if (gotUser == null || !gotUser.password().equals(userData.password())) {
+               throw new RespExp(401, "Error: Invalid login attempt");
+           }
+
+           String newAuthToken = UUID.randomUUID().toString();
+           AuthData authRecord = new AuthData(userData.username(), newAuthToken);
+           authDAO.addAuth(authRecord);
+           return authRecord;
+
+       }
+       catch(DataAccessException e){
+           throw new RespExp(500, e.getMessage());
+       }
     }
 
     public void logoutUser(String authToken) throws DataAccessException {
         if (authDAO.getAuth(authToken) == null) {
-            throw new DataAccessException("Unauthorized logout attempt");
+            throw new DataAccessException("Error: Unauthorized logout attempt");
         }
         authDAO.deleteAuth(authToken);
     }
 
 
 
-    public void clear() {
-        userDAO.clear();
-        authDAO.clear();
+    public void clear() throws RespExp {
+        try {
+            userDAO.clear();
+            authDAO.clear();
+        }
+        catch(DataAccessException e){
+            throw new RespExp(500, "Error: " + e.getMessage());
+        }
+
     }
 }
