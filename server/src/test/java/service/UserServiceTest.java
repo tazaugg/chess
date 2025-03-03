@@ -6,6 +6,8 @@ import model.UserData;
 import org.junit.jupiter.api.*;
 import service.*;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class UserServiceTest {
 
     static UserAuthService userService;
@@ -34,7 +36,7 @@ public class UserServiceTest {
     @DisplayName("Successfully Create a User")
     void testCreateUserSuccess() throws RespExp, DataAccessException {
         AuthData generatedAuth = userService.createUser(testUser);
-        Assertions.assertEquals(authDAO.getAuth(generatedAuth.authToken()), generatedAuth);
+        assertEquals(authDAO.getAuth(generatedAuth.authToken()), generatedAuth);
     }
 
     @Test
@@ -49,17 +51,17 @@ public class UserServiceTest {
     void testLoginUserSuccess() throws RespExp, DataAccessException {
         userService.createUser(testUser);
         AuthData loggedInAuth = userService.loginUser(testUser);
-        Assertions.assertEquals(authDAO.getAuth(loggedInAuth.authToken()), loggedInAuth);
+        assertEquals(authDAO.getAuth(loggedInAuth.authToken()), loggedInAuth);
     }
 
     @Test
     @DisplayName("Login Failure with Incorrect Credentials")
     void testLoginUserFailure() throws RespExp {
-        Assertions.assertThrows(UnauthExcept.class, () -> userService.loginUser(testUser));
+        Assertions.assertThrows(RespExp.class, () -> userService.loginUser(testUser));
 
         userService.createUser(testUser);
         UserData incorrectPassUser = new UserData(testUser.username(), "wrongPass", testUser.email());
-        Assertions.assertThrows(UnauthExcept.class, () -> userService.loginUser(incorrectPassUser));
+        Assertions.assertThrows(RespExp.class, () -> userService.loginUser(incorrectPassUser));
     }
 
     @Test
@@ -67,23 +69,23 @@ public class UserServiceTest {
     void testLogoutUserSuccess() throws RespExp, DataAccessException {
         AuthData auth = userService.createUser(testUser);
         userService.logoutUser(auth.authToken());
-        Assertions.assertThrows(DataAccessException.class, () -> authDAO.getAuth(auth.authToken()));
+        assertEquals(null, authDAO.getAuth(auth.authToken()));
     }
 
     @Test
     @DisplayName("Logout Failure with Invalid Auth Token")
     void testLogoutUserFailure() throws RespExp {
         AuthData auth = userService.createUser(testUser);
-        Assertions.assertThrows(UnauthExcept.class, () -> userService.logoutUser("invalidAuthToken"));
+        Assertions.assertThrows(RespExp.class, () -> userService.logoutUser("invalidAuthToken"));
     }
 
     @Test
     @DisplayName("Clear Database Successfully")
-    void testClearDbSuccess() throws RespExp {
+    void testClearDbSuccess() throws RespExp, DataAccessException {
         AuthData auth = userService.createUser(testUser);
         userService.clear();
-        Assertions.assertThrows(DataAccessException.class, () -> userDAO.getUser(testUser.username()));
-        Assertions.assertThrows(DataAccessException.class, () -> authDAO.getAuth(auth.authToken()));
+        Assertions.assertEquals(null, userDAO.getUser(testUser.username()));
+        Assertions.assertEquals(null, authDAO.getAuth(auth.authToken()));
     }
 
     @Test

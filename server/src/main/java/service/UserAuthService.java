@@ -54,11 +54,15 @@ public class UserAuthService {
        }
     }
 
-    public void logoutUser(String authToken) throws DataAccessException {
-        if (authDAO.getAuth(authToken) == null) {
-            throw new DataAccessException("Error: Unauthorized logout attempt");
+    public void logoutUser(String authToken) throws RespExp{
+        try{
+            if (authDAO.getAuth(authToken) == null) {
+                throw new RespExp(401,"Error: Unauthorized logout attempt");
+            }
+            authDAO.deleteAuth(authToken);
+        } catch (DataAccessException e) {
+            throw new RespExp(500, "Error" + e.getMessage());
         }
-        authDAO.deleteAuth(authToken);
     }
 
 

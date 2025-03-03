@@ -47,18 +47,11 @@ public class UserAuthHandler {
         return resp.body();
     }
 
-    public Object logout(Request req, Response resp) {
-        try {
-            String token = req.headers("authorization");
-            authService.logoutUser(token);
-            resp.status(200);
-            return "{}";
-        } catch (DataAccessException e) {
-            resp.status(401);
-            return "{ \"message\": \"Error: unauthorized\" }";
-        } catch (Exception e) {
-            resp.status(500);
-            return "{ \"message\": \"Error: %s\" }".formatted(e.getMessage());
-        }
+    public Object logout(Request req, Response resp) throws RespExp {
+        String token = req.headers("authorization");
+        authService.logoutUser(token);
+        resp.status(200);
+        return "{}";
+
     }
 }
