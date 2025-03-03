@@ -119,14 +119,7 @@ public class GameServiceTest {
         assertEquals(expected.game(), actual.game());
     }
 
-    public static void assertGameCollectionEqual(Collection<GameData> excepted, Collection<GameData> actual){
-        GameData[] actualList = actual.toArray(new GameData[]{});
-        GameData[] expectedList = excepted.toArray(new GameData[]{});
-        assertEquals(expectedList.length, actualList.length);
-        for (var i = 0; i < actualList.length; i++){
-            assertGameDataEqual(expectedList[i], actualList[i]);
-        }
 
-    }
+
 
 }

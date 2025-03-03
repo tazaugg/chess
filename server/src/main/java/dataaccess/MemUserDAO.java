@@ -26,12 +26,7 @@ public class MemUserDAO implements UserDAO {
     }
 
 
-    @Override
-    public boolean authUser(String username, String password) {
-        return userStorage.stream()
-                .anyMatch(user -> user.username().equals(username) &&
-                        user.password().equals(password));
-    }
+
 
     @Override
     public void clear() {

@@ -68,10 +68,10 @@ public class GameService {
             String blackPlayer = currentGame.blackUsername();
 
             if ("WHITE".equalsIgnoreCase(color)) {
-                if (whitePlayer != null) throw new RespExp(403, "Error: already taken"); // Already taken
+                if (whitePlayer != null) {throw new RespExp(403, "Error: already taken");}
                 whitePlayer = userAuth.username();
             } else if ("BLACK".equalsIgnoreCase(color)) {
-                if (blackPlayer != null) throw new RespExp(403, "Error: already taken"); // Already taken
+                if (blackPlayer != null) {throw new RespExp(403, "Error: already taken");}
                 blackPlayer = userAuth.username();
             } else  {
                 throw new RespExp(400, "Error: bad request"); // Invalid request
