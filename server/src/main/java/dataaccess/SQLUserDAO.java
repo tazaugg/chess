@@ -4,6 +4,7 @@ import model.AuthData;
 import model.UserData;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -34,7 +35,26 @@ public class SQLUserDAO implements UserDAO {
     }
     @Override
     public UserData getUser(String username) throws DataAccessException {
+        var statment = "SELECT * FROM user_data WHERE username = ?";
+        try(var conn = DatabaseManager.getConnection()){
+            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
+                pstmt.setString(1, username);
+                try(ResultSet rs = pstmt.executeQuery()){
+                    if(rs.next()){
+                        return new UserData(
+                                rs.getString("username"),
+                                rs.getString("password"),
+                                rs.getString("email")
+                        );
+                    }
+                }
+            }
+        }
+        catch(SQLException e){
+            throw new DataAccessException(e.getMessage());
+        }
         return null;
+
     }
 
     @Override
@@ -60,6 +80,18 @@ public class SQLUserDAO implements UserDAO {
 
     @Override
     public void clear() throws DataAccessException {
+        var statment = "TRUNCATE  user_data";
+        try(var conn= DatabaseManager.getConnection()) {
+            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
+                pstmt.executeUpdate();
+            }
+
+        }
+        catch(SQLException e){
+            throw new DataAccessException(e.getMessage());
+        }
 
     }
+
+
 }
