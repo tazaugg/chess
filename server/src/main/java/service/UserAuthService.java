@@ -1,6 +1,7 @@
 package service;
 import dataaccess.*;
 import model.*;
+import org.mindrot.jbcrypt.BCrypt;
 import spark.Response;
 
 import java.util.UUID;
@@ -22,7 +23,8 @@ public class UserAuthService {
             }
             String authToken = UUID.randomUUID().toString();
             AuthData authData = new AuthData(userData.username(), authToken);
-
+            String hash = BCrypt.hashpw(userData.password(), BCrypt.gensalt());
+            userData = new UserData(userData.username(), hash, authToken);
             userDAO.createUser(userData);
 
 
@@ -39,7 +41,7 @@ public class UserAuthService {
        try{
            UserData gotUser = userDAO.getUser(userData.username());
 
-           if (gotUser != null && gotUser.password().equals(userData.password())) {
+           if (gotUser != null && BCrypt.checkpw(userData.password(), gotUser.password())) {
                String newAuthToken = UUID.randomUUID().toString();
                AuthData authRecord = new AuthData(userData.username(), newAuthToken);
                return  authDAO.addAuth(authRecord);
