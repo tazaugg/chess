@@ -3,6 +3,7 @@ package dataaccess;
 import model.AuthData;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
@@ -32,10 +33,7 @@ public class SQLAuthDAO implements AuthDAO {
         }
     }
 
-    @Override
-    public void addAuth(String authToken, String username) throws DataAccessException {
 
-    }
 
     @Override
     public AuthData addAuth(AuthData authData) throws DataAccessException {
@@ -57,16 +55,51 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
+        var statment = "DELETE FROM auth_data WHERE authToken = ?";
+        try(var conn= DatabaseManager.getConnection()) {
+            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
+                pstmt.setString(1, authToken);
+                pstmt.executeUpdate();
+            }
+
+        }
+        catch(SQLException e){
+            throw new DataAccessException(e.getMessage());
+        }
 
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
+        var statment = "SELECT * FROM auth_data WHERE authToken = ?";
+        try(var conn = DatabaseManager.getConnection()){
+            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
+                pstmt.setString(1, authToken);
+                try(ResultSet rs = pstmt.executeQuery()){
+                    if(rs.next()){
+                        return new AuthData(rs.getString("authToken"), rs.getString("username"));
+                    }
+                }
+            }
+        }
+        catch(SQLException e){
+            throw new DataAccessException(e.getMessage());
+        }
         return null;
     }
 
     @Override
     public void clear() throws DataAccessException {
+        var statment = "TRUNCATE  auth_data";
+        try(var conn= DatabaseManager.getConnection()) {
+            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
+                pstmt.executeUpdate();
+            }
+
+        }
+        catch(SQLException e){
+            throw new DataAccessException(e.getMessage());
+        }
 
     }
 }

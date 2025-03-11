@@ -12,10 +12,7 @@ public class MemAuthDAO implements AuthDAO {
         authStorage = new HashMap<>();
     }
 
-    @Override
-    public void addAuth(String authToken, String username) {
-        authStorage.put(authToken, new AuthData(username, authToken));
-    }
+
 
     @Override
     public AuthData addAuth(AuthData authData) {
