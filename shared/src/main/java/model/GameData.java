@@ -6,4 +6,7 @@ public record GameData(int gameID, String whiteUsername, String blackUsername, S
     public String toString(){
         return new Gson().toJson(this);
     }
+    public GameData setGameID(int gameID) {
+        return new GameData(gameID, whiteUsername, blackUsername, gameName, game);
+    }
 }
