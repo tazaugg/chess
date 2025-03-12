@@ -82,8 +82,5 @@ public class UserDAOTests {
         assertEquals(expected.email(), actual.email());
     }
 
-    private static void assertUserCollectionEqual(Collection<UserData> expected, Collection<UserData> actual) {
-        assertEquals(expected.size(), actual.size());
-        assertTrue(actual.containsAll(expected) && expected.containsAll(actual));
-    }
+
 }

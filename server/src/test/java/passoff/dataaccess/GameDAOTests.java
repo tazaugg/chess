@@ -134,8 +134,8 @@ public class GameDAOTests {
 
     public static void verifyGameData(GameData expected, GameData actual) {
         assertEquals(expected.gameID(), actual.gameID());
-        assertEquals(expected.whiteUsername(), actual.whiteUsername());
         assertEquals(expected.blackUsername(), actual.blackUsername());
+        assertEquals(expected.whiteUsername(), actual.whiteUsername());
         assertEquals(expected.gameName(), actual.gameName());
         assertEquals(expected.game(), actual.game());
     }

@@ -24,8 +24,8 @@ public class SQLUserDAO implements UserDAO {
         DatabaseManager.createDatabase();
         try(var conn = DatabaseManager.getConnection()){
             for(var stmt : createStatements){
-                try(PreparedStatement pstmt = conn.prepareStatement(stmt)){
-                    pstmt.executeUpdate();
+                try(PreparedStatement prepStmt = conn.prepareStatement(stmt)){
+                    prepStmt.executeUpdate();
                 }
             }
         }
