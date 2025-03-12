@@ -22,6 +22,16 @@ public class ChessGame {
 
     }
 
+    @Override
+    public String toString() {
+        return "ChessGame{" +
+                "board=" + board +
+                ", currentTeam=" + currentTeam +
+                ", lastMove=" + lastMove +
+                ", movedPieces=" + movedPieces +
+                '}';
+    }
+
     /**
      * @return Which team's turn it is
      */

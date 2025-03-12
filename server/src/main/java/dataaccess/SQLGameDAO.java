@@ -21,7 +21,8 @@ public class SQLGameDAO implements GameDAO {
                 gameID int NOT NULL AUTO_INCREMENT,
                 gameName varchar(255) NOT NULL UNIQUE,
                 json text NOT NULL,
-                PRIMARY KEY (gameID)
+                PRIMARY KEY (gameID),
+                INDEX(gameName)
             )
             """
     };
@@ -29,7 +30,7 @@ public class SQLGameDAO implements GameDAO {
         DatabaseManager.createDatabase();
         try(var conn = DatabaseManager.getConnection()){
             for(var stmt : createStatements){
-                try(PreparedStatement pstmt = conn.prepareStatement(stmt)){
+                try(var pstmt = conn.prepareStatement(stmt)){
                     pstmt.executeUpdate();
                 }
             }
@@ -41,9 +42,9 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public Collection<GameData> listGames() throws DataAccessException{
         var games = new ArrayList<GameData>();
-        var stmt = "SELECT * FROM game_data";
+        var stmt = "SELECT gameID, json FROM game_data";
         try(var conn=DatabaseManager.getConnection()){
-            try(PreparedStatement pstmt = conn.prepareStatement(stmt)){
+            try(var pstmt = conn.prepareStatement(stmt)){
                 try(var rs = pstmt.executeQuery()){
                     while(rs.next()){
                         games.add(readGame(rs));
@@ -62,13 +63,19 @@ public class SQLGameDAO implements GameDAO {
         var statement = "INSERT INTO game_data (gameName, json) VALUES (?, ?)";
         var json= new Gson().toJson(game);
         try(var conn = DatabaseManager.getConnection()) {
-            try(PreparedStatement pstmt = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)){
+            try(var pstmt = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)){
                 pstmt.setString(1, game.gameName());
                 pstmt.setString(2, json);
                 pstmt.executeUpdate();
                 var rs = pstmt.getGeneratedKeys();
                 if(rs.next()){
-                    return game.setGameID(rs.getInt(1));
+                    return new GameData(
+                            rs.getInt(1),
+                            game.whiteUsername(),
+                            game.blackUsername(),
+                            game.gameName(),
+                            game.game()
+                    );
                 }
             }
 
@@ -76,16 +83,16 @@ public class SQLGameDAO implements GameDAO {
         catch(SQLException e){
             throw new DataAccessException(e.getMessage());
         }
-        return null;
+        return game;
     }
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
         var statement = "SELECT gameID, json FROM game_data WHERE gameID = ?";
         try(var conn = DatabaseManager.getConnection()){
-            try(PreparedStatement pstmt = conn.prepareStatement(statement)){
+            try(var pstmt = conn.prepareStatement(statement)){
                 pstmt.setInt(1, gameID);
-                try(ResultSet rs = pstmt.executeQuery()){
+                try(var rs = pstmt.executeQuery()){
                     if(rs.next()){
                         return readGame(rs);
                     }
@@ -109,9 +116,9 @@ public class SQLGameDAO implements GameDAO {
     public boolean gameExists(int gameID) throws DataAccessException {
         var statement = "SELECT COUNT(*) FROM game_data WHERE gameID = ?";
         try(var conn = DatabaseManager.getConnection()){
-            try(PreparedStatement pstmt = conn.prepareStatement(statement)){
+            try(var pstmt = conn.prepareStatement(statement)){
                 pstmt.setInt(1, gameID);
-                try(ResultSet rs = pstmt.executeQuery()){
+                try(var rs = pstmt.executeQuery()){
                     if(rs.next()){
                         return rs.getInt(1) == 1;
                     }
@@ -127,9 +134,10 @@ public class SQLGameDAO implements GameDAO {
     @Override
     public void updateGame(GameData game) throws DataAccessException {
         var statement = "UPDATE game_data SET json = ? WHERE gameID = ?";
+        var json= new Gson().toJson(game);
         try(var conn=DatabaseManager.getConnection()) {
-            try(PreparedStatement pstmt = conn.prepareStatement(statement)){
-                pstmt.setString(1, game.gameName());
+            try(var pstmt = conn.prepareStatement(statement)){
+                pstmt.setString(1, json);
                 pstmt.setInt(2, game.gameID());
                 pstmt.executeUpdate();
             }
@@ -144,7 +152,7 @@ public class SQLGameDAO implements GameDAO {
     public void clear() throws DataAccessException {
         var statement = "TRUNCATE game_data";
         try(var conn = DatabaseManager.getConnection()){
-            try(PreparedStatement pstmt = conn.prepareStatement(statement)){
+            try(var pstmt = conn.prepareStatement(statement)){
                 pstmt.executeUpdate();
             }
         }

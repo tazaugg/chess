@@ -12,8 +12,8 @@ public class SQLAuthDAO implements AuthDAO {
     private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS auth_data (
-                authToken VARCHAR(255) NOT NULL UNIQUE,
                 username VARCHAR(255) NOT NULL,
+                authToken VARCHAR(255) NOT NULL UNIQUE,
                 PRIMARY KEY (authToken)
             )
             """
@@ -37,12 +37,12 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public AuthData addAuth(AuthData authData) throws DataAccessException {
-        authData=new AuthData(authData.username(), UUID.randomUUID().toString());
-        var statment = "INSERT INTO auth_data (authToken, username) VALUES (?, ?)";
+        authData = new AuthData(authData.username(), UUID.randomUUID().toString());
+        var statement = "INSERT INTO auth_data (username, authToken) VALUES (?, ?)";
         try (var conn = DatabaseManager.getConnection()) {
-            try(PreparedStatement pstmt = conn.prepareStatement(statment)){
-                pstmt.setString(1, authData.authToken());
-                pstmt.setString(2, authData.username());
+            try(PreparedStatement pstmt = conn.prepareStatement(statement)){
+                pstmt.setString(1, authData.username());
+                pstmt.setString(2, authData.authToken());
                 pstmt.executeUpdate();
             }
 
@@ -71,13 +71,13 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        var statment = "SELECT * FROM auth_data WHERE authToken = ?";
+        var statment = "SELECT username, authToken FROM auth_data WHERE authToken = ?";
         try(var conn = DatabaseManager.getConnection()){
             try(PreparedStatement pstmt = conn.prepareStatement(statment)){
                 pstmt.setString(1, authToken);
                 try(ResultSet rs = pstmt.executeQuery()){
                     if(rs.next()){
-                        return new AuthData(rs.getString("authToken"), rs.getString("username"));
+                        return new AuthData(rs.getString("username"), rs.getString("authToken"));
                     }
                 }
             }
