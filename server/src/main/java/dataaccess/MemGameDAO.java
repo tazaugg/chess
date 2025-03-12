@@ -21,7 +21,14 @@ public class MemGameDAO implements GameDAO {
 
 
     @Override
-    public GameData createGame(GameData game) {
+    public GameData createGame(GameData game) throws DataAccessException{
+        Iterator<GameData> it = gameStorage.values().iterator();
+        while (it.hasNext()) {
+            GameData gameData = it.next();
+            if(gameData.gameName().equals(game.gameName())) {
+                throw new DataAccessException("Game name already exists");
+            }
+        }
 
         game = new GameData(nextId++, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
         gameStorage.put(game.gameID(), game);
