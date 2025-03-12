@@ -133,6 +133,9 @@ public class SQLGameDAO implements GameDAO {
 
     @Override
     public void updateGame(GameData game) throws DataAccessException {
+        if(!gameExists(game.gameID())){
+            throw new DataAccessException("Game does not exist");
+        }
         var statement = "UPDATE game_data SET json = ? WHERE gameID = ?";
         var json= new Gson().toJson(game);
         try(var conn=DatabaseManager.getConnection()) {

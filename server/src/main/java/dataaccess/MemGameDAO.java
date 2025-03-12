@@ -24,6 +24,7 @@ public class MemGameDAO implements GameDAO {
 
     @Override
     public GameData createGame(GameData game) {
+
         game = new GameData(nextId++, game.whiteUsername(), game.blackUsername(), game.gameName(), game.game());
         gameStorage.put(game.gameID(), game);
         return game;
@@ -40,7 +41,10 @@ public class MemGameDAO implements GameDAO {
     }
 
     @Override
-    public void updateGame(GameData updatedGame) {
+    public void updateGame(GameData updatedGame) throws DataAccessException {
+        if (!gameExists(updatedGame.gameID())) {
+            throw new DataAccessException("Game with ID " + updatedGame.gameID() + " does not exist");
+        }
         gameStorage.put(updatedGame.gameID(), updatedGame);
     }
 

@@ -22,7 +22,12 @@ public class MemUserDAO implements UserDAO {
 
     @Override
     public void createUser(UserData user) throws DataAccessException {
-        userStorage.add(user);
+        if(!userStorage.contains(user)) {
+            userStorage.add(user);
+        }
+        else{
+            throw new DataAccessException("User already exists");
+        }
     }
 
 

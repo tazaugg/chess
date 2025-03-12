@@ -37,6 +37,9 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public AuthData addAuth(AuthData authData) throws DataAccessException {
+        if(authData == null || authData.username() == null){
+            throw new DataAccessException("No Username provided");
+        }
         authData = new AuthData(authData.username(), UUID.randomUUID().toString());
         var statement = "INSERT INTO auth_data (username, authToken) VALUES (?, ?)";
         try (var conn = DatabaseManager.getConnection()) {
@@ -55,6 +58,9 @@ public class SQLAuthDAO implements AuthDAO {
 
     @Override
     public void deleteAuth(String authToken) throws DataAccessException {
+        if(getAuth(authToken) == null){
+            throw new DataAccessException("No Auth found");
+        }
         var statement = "DELETE FROM auth_data WHERE authToken = ?";
         try(var conn= DatabaseManager.getConnection()) {
             try(PreparedStatement pstmt = conn.prepareStatement(statement)){

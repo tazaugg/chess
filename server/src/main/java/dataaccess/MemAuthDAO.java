@@ -15,15 +15,21 @@ public class MemAuthDAO implements AuthDAO {
 
 
     @Override
-    public AuthData addAuth(AuthData authData) {
+    public AuthData addAuth(AuthData authData) throws DataAccessException {
+        if(authData == null || authData.username() == null){
+            throw new DataAccessException("No Username provided");
+        }
         authData=new AuthData(authData.username(), UUID.randomUUID().toString());
         authStorage.put(authData.authToken(), authData);
         return authData;
     }
 
     @Override
-    public void deleteAuth(String authToken) {
-        authStorage.remove(authToken);
+    public void deleteAuth(String authToken) throws DataAccessException {
+
+        if(authStorage.remove(authToken) == null){
+            throw new DataAccessException("Can't remove what doesn't exist");
+        }
     }
 
     @Override
