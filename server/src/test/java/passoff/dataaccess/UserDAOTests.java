@@ -54,6 +54,8 @@ public class UserDAOTests {
         UserDAO userDAO = getUserDAO(dbClass);
         assertNull(userDAO.getUser("bill_nye_science"));
     }
+
+
     @ParameterizedTest
     @ValueSource(classes = {MemUserDAO.class, SQLUserDAO.class})
     void clear(Class<? extends UserDAO> dbClass) throws DataAccessException {

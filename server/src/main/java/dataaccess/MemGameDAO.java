@@ -1,10 +1,8 @@
 package dataaccess;
 
-import chess.ChessGame;
 import model.GameData;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class MemGameDAO implements GameDAO {
     private int nextId = 1;
@@ -41,11 +39,12 @@ public class MemGameDAO implements GameDAO {
     }
 
     @Override
-    public void updateGame(GameData updatedGame) throws DataAccessException {
+    public GameData updateGame(GameData updatedGame) throws DataAccessException {
         if (!gameExists(updatedGame.gameID())) {
             throw new DataAccessException("Game with ID " + updatedGame.gameID() + " does not exist");
         }
         gameStorage.put(updatedGame.gameID(), updatedGame);
+        return updatedGame;
     }
 
     @Override

@@ -2,15 +2,11 @@ package dataaccess;
 
 import com.google.gson.Gson;
 import model.GameData;
-import model.UserData;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
@@ -132,7 +128,7 @@ public class SQLGameDAO implements GameDAO {
     }
 
     @Override
-    public void updateGame(GameData game) throws DataAccessException {
+    public GameData updateGame(GameData game) throws DataAccessException {
         if(!gameExists(game.gameID())){
             throw new DataAccessException("Game does not exist");
         }
@@ -149,6 +145,7 @@ public class SQLGameDAO implements GameDAO {
             throw new DataAccessException(e.getMessage());
         }
 
+        return game;
     }
 
     @Override
