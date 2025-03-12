@@ -22,6 +22,17 @@ public class Server {
         authDAO = new MemAuthDAO();
         gameDAO = new MemGameDAO();
 
+        try{
+            userDAO = new SQLUserDAO();
+            authDAO = new SQLAuthDAO();
+            gameDAO = new SQLGameDAO();
+        }
+        catch(DataAccessException e){
+            userDAO = new MemUserDAO();
+            authDAO = new MemAuthDAO();
+            gameDAO = new MemGameDAO();
+        }
+
         userAuthService = new UserAuthService(userDAO, authDAO);
         gameService = new GameService(gameDAO,authDAO);
 
