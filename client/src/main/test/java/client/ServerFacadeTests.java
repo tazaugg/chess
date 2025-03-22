@@ -88,4 +88,18 @@ public class ServerFacadeTests {
         Assertions.assertThrows(RespExp.class, () -> createGame(auth));
     }
 
+    @Test
+    public void testListGames() throws RespExp {
+        var auth = createTestUser();
+        createGame(auth);
+        Assertions.assertDoesNotThrow(() -> facade.listGames(auth));
+        Assertions.assertEquals(1, facade.listGames(auth).length);
+    }
+
+    @Test
+    public void testListGamesNegative() throws RespExp {
+        var auth = createTestUser();
+        Assertions.assertThrows(RespExp.class, () -> facade.listGames(auth + "bad"));
+    }
+
 }

@@ -3,6 +3,7 @@ package client;
 import com.google.gson.Gson;
 import exceptions.RespExp;
 import model.AuthData;
+import model.GameData;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -57,6 +58,13 @@ public class ServerFacade {
         record GameID(int gameID) { };
         GameID gameID = makeRequest("POST", path, requestBody, GameID.class, authToken);
         return gameID.gameID();
+    }
+
+    public GameData[] listGames(String authToken) throws RespExp {
+        String path = "/game";
+        record GamesList(GameData[] games) {};
+        GamesList games = makeRequest("GET", path, null, GamesList.class, authToken);
+        return games.games();
     }
 
 
