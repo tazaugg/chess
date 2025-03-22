@@ -2,12 +2,11 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.*;
+import exceptions.RespExp;
 import model.*;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class GameService {
     private final GameDAO gameDAO;

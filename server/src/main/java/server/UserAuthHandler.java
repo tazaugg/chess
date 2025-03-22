@@ -1,11 +1,9 @@
 package server;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import dataaccess.DataAccessException;
 import model.AuthData;
 import model.UserData;
-import service.RespExp;
+import exceptions.RespExp;
 import service.UserAuthService;
 import spark.Request;
 import spark.Response;

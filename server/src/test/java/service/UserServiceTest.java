@@ -1,10 +1,10 @@
 package service;
 
 import dataaccess.*;
+import exceptions.RespExp;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.*;
-import service.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,16 +1,13 @@
 package server;
 
 import com.google.gson.Gson;
-import dataaccess.DataAccessException;
-import dataaccess.UnauthExcept;
 import model.GameData;
 import service.GameService;
-import service.RespExp;
+import exceptions.RespExp;
 import spark.Request;
 import spark.Response;
 
 import java.util.Collection;
-import java.util.Set;
 
 public class GameHandler {
 

@@ -5,13 +5,7 @@ import dataaccess.*;
 import model.AuthData;
 import model.GameData;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.Assertions.*;
-import service.GameService;
-import server.*;
-import service.RespExp;
-
-import java.util.Collection;
-import java.util.HashSet;
+import exceptions.RespExp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

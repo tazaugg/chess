@@ -3,8 +3,7 @@ package client;
 import model.AuthData;
 import org.junit.jupiter.api.*;
 import server.Server;
-import server.ServerFacade;
-import service.RespExp;
+import exceptions.RespExp;
 
 public class ServerFacadeTests {
 
@@ -39,4 +38,36 @@ public class ServerFacadeTests {
     public void testUserRegistration() throws RespExp {
         Assertions.assertDoesNotThrow(this::createTestUser);
     }
+
+    @Test
+    public void testRegisterDuplicate() throws RespExp{
+        createTestUser();
+        Assertions.assertThrows(RespExp.class, this::createTestUser);
+    }
+
+    @Test
+    public void testUserLogin() throws RespExp {
+        createTestUser();
+        Assertions.assertDoesNotThrow(() -> facade.login("testUser", "testPass"));
+    }
+
+    @Test
+    public void testLoginNegative() throws RespExp {
+        Assertions.assertThrows(RespExp.class, () -> facade.login("testUser", "testPass"));
+        createTestUser();
+        Assertions.assertThrows(RespExp.class, () -> facade.login("testUser", "badPass"));
+    }
+
+    @Test
+    public void testUserLogout() throws RespExp {
+        var auth = createTestUser();
+        Assertions.assertDoesNotThrow(() -> facade.logout(auth));
+    }
+
+    @Test
+    public void logoutNegative() throws RespExp {
+        var auth = createTestUser();
+        Assertions.assertThrows(RespExp.class, () -> facade.logout(auth + "bad"));
+    }
+
 }

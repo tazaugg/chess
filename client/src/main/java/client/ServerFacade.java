@@ -1,9 +1,8 @@
-package server;
+package client;
 
 import com.google.gson.Gson;
-import service.RespExp;
+import exceptions.RespExp;
 import model.AuthData;
-import model.UserData;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -36,6 +35,24 @@ public class ServerFacade {
         return makeRequest("POST", path, requestBody, AuthData.class, null);
     }
 
+    /** Login an existing user*/
+    public AuthData login(String username, String password) throws RespExp {
+        String path = "/session";
+        Map<String, String> requestBody = Map.of(
+                "username", username,
+                "password", password
+        );
+        return makeRequest("POST", path, requestBody, AuthData.class, null);
+    }
+
+    /** Logout current user */
+    public void logout(String authToken) throws RespExp {
+        String path = "/session";
+        makeRequest("DELETE", path, null, null, authToken);
+    }
+
+
+
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws RespExp {
         try {
             URL url = new URI(serverUrl + path).toURL();
@@ -43,7 +60,7 @@ public class ServerFacade {
             http.setRequestMethod(method);
             http.setDoOutput(true);
             if (authToken != null) {
-                http.setRequestProperty("Authorization", "Bearer " + authToken);
+                http.setRequestProperty("Authorization", authToken);
             }
             writeRequestBody(request, http);
             http.connect();
