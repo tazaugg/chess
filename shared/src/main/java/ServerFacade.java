@@ -1,4 +1,3 @@
-
 import com.google.gson.Gson;
 import model.AuthData;
 import model.GameData;
@@ -10,6 +9,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.Map;
 
 public class ServerFacade {
 
@@ -41,6 +41,19 @@ public class ServerFacade {
         record GamesResponse(GameData[] games) {}
         var response = sendRequest("GET", "/game", null, GamesResponse.class);
         return response.games();
+    }
+
+    public int initializeGame(String gameTitle) throws RespExp {
+        var endpoint = "/game";
+        record GameIdentifier(int gameID) {}
+        var payload = Map.of("name", gameTitle);
+        var response = sendRequest("POST", endpoint, payload, GameIdentifier.class);
+        return response.gameID();
+    }
+
+    public void participateInGame(String colorChoice, int gameId) throws RespExp {
+        var gameDetails = Map.of("playerColor", colorChoice, "gameID", gameId);
+        sendRequest("PUT", "/game", gameDetails, null);
     }
 
     public void enterGame(JoinGameRequest gameRequest) throws RespExp {
