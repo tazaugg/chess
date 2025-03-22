@@ -51,6 +51,14 @@ public class ServerFacade {
         makeRequest("DELETE", path, null, null, authToken);
     }
 
+    public int createGame(String gameName, String authToken) throws RespExp {
+        String path = "/game";
+        Map<String, String> requestBody = Map.of("gameName", gameName);
+        record GameID(int gameID) { };
+        GameID gameID = makeRequest("POST", path, requestBody, GameID.class, authToken);
+        return gameID.gameID();
+    }
+
 
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws RespExp {

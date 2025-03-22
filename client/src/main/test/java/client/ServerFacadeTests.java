@@ -70,4 +70,22 @@ public class ServerFacadeTests {
         Assertions.assertThrows(RespExp.class, () -> facade.logout(auth + "bad"));
     }
 
+    public void createGame(String authToken) throws RespExp {
+        facade.createGame("A game", authToken);
+    }
+
+    @Test
+    public void testGameCreation() throws RespExp {
+        var auth = createTestUser();
+        Assertions.assertDoesNotThrow(() -> createGame(auth));
+    }
+
+    @Test
+    public void testGameCreationNegative() throws RespExp {
+        var auth = createTestUser();
+        Assertions.assertThrows(RespExp.class, () -> createGame(auth + "bad"));
+        createGame(auth);
+        Assertions.assertThrows(RespExp.class, () -> createGame(auth));
+    }
+
 }
