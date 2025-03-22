@@ -2,28 +2,42 @@ package client;
 
 import org.junit.jupiter.api.*;
 import server.Server;
-
+import server.ServerFacade; // Ensure the correct import path
+import service.RespExp;
+import model.AuthData;
+import model.UserData;
 
 public class ServerFacadeTests {
 
-    private static Server server;
+    private static Server testServer;
+    private static ServerFacade facade;
 
     @BeforeAll
-    public static void init() {
-        server = new Server();
-        var port = server.run(0);
-        System.out.println("Started test HTTP server on " + port);
+    public static void startServer() {
+        testServer = new Server();
+        int port = testServer.run(0);
+        System.out.println("Server initialized on port: " + port);
+        facade = new ServerFacade("http://localhost:" + port);
+    }
+
+    @BeforeEach
+    public void wipeDatabase() throws RespExp {
+        facade.resetDatabase();
     }
 
     @AfterAll
-    static void stopServer() {
-        server.stop();
+    public static void stopServer() {
+        testServer.stop();
     }
 
+    private String registerUser() throws RespExp {
+        UserData newUser = new UserData("sampleUser", "securePass", "user@example.com");
+        AuthData auth = facade.createUser(newUser.username(), newUser.password(), newUser.email());
+        return auth.authToken();
+    }
 
     @Test
-    public void sampleTest() {
+    public void basicTest() {
         Assertions.assertTrue(true);
     }
-
 }
