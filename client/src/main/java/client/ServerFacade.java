@@ -67,6 +67,15 @@ public class ServerFacade {
         return games.games();
     }
 
+    public void joinGame(int gameID, String playerColor, String authToken) throws RespExp {
+        String path = "/game";
+        Map<String, String> requestBody = Map.of(
+                "playerColor", playerColor,
+                "gameID", String.format("%d",gameID)
+        );
+        makeRequest("PUT", path, requestBody, null, authToken);
+    }
+
 
 
     private <T> T makeRequest(String method, String path, Object request, Class<T> responseClass, String authToken) throws RespExp {

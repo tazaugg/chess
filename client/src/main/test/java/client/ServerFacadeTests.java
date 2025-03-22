@@ -70,8 +70,8 @@ public class ServerFacadeTests {
         Assertions.assertThrows(RespExp.class, () -> facade.logout(auth + "bad"));
     }
 
-    public void createGame(String authToken) throws RespExp {
-        facade.createGame("A game", authToken);
+    public int createGame(String authToken) throws RespExp {
+        return facade.createGame("A_game", authToken);
     }
 
     @Test
@@ -101,5 +101,24 @@ public class ServerFacadeTests {
         var auth = createTestUser();
         Assertions.assertThrows(RespExp.class, () -> facade.listGames(auth + "bad"));
     }
+
+    @Test
+    public void testJoinGamePositive() throws RespExp {
+        var auth = createTestUser();
+        var gameID = createGame(auth);
+        Assertions.assertDoesNotThrow(() -> facade.joinGame(gameID, "white", auth));
+
+        Assertions.assertDoesNotThrow(() -> facade.joinGame(gameID, "black", auth));
+    }
+
+    @Test
+    public void testJoinGameNegative() throws RespExp {
+        var auth = createTestUser();
+        var gameID = createGame(auth);
+        Assertions.assertThrows(RespExp.class, () -> facade.joinGame(gameID, "white", auth+"bad"));
+        facade.joinGame(gameID, "white", auth);
+        Assertions.assertThrows(RespExp.class, () -> facade.joinGame(gameID, "white", auth));
+    }
+
 
 }
