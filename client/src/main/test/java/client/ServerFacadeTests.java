@@ -1,43 +1,42 @@
 package client;
 
+import model.AuthData;
 import org.junit.jupiter.api.*;
 import server.Server;
-import server.ServerFacade; // Ensure the correct import path
+import server.ServerFacade;
 import service.RespExp;
-import model.AuthData;
-import model.UserData;
 
 public class ServerFacadeTests {
 
-    private static Server testServer;
+    private static Server server;
     private static ServerFacade facade;
 
     @BeforeAll
-    public static void startServer() {
-        testServer = new Server();
-        int port = testServer.run(0);
-        System.out.println("Server initialized on port: " + port);
+    public static void setupServer() {
+        server = new Server();
+        var port = server.run(0);
+        System.out.println("Server started on port: " + port);
         facade = new ServerFacade("http://localhost:" + port);
     }
 
     @BeforeEach
-    public void wipeDatabase() throws RespExp {
-        facade.resetDatabase();
+    @AfterEach
+    public void resetDatabase() throws RespExp {
+        facade.clear();
     }
 
     @AfterAll
-    public static void stopServer() {
-        testServer.stop();
+    static void stopServer() {
+        server.stop();
     }
 
-    private String registerUser() throws RespExp {
-        UserData newUser = new UserData("sampleUser", "securePass", "user@example.com");
-        AuthData auth = facade.createUser(newUser.username(), newUser.password(), newUser.email());
+    private String createTestUser() throws RespExp {
+        AuthData auth = facade.register("testUser", "testPass", "test@example.com");
         return auth.authToken();
     }
 
     @Test
-    public void basicTest() {
-        Assertions.assertTrue(true);
+    public void testUserRegistration() throws RespExp {
+        Assertions.assertDoesNotThrow(this::createTestUser);
     }
 }
