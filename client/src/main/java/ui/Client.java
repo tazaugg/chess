@@ -6,5 +6,4 @@ public interface Client {
     Client transition();
     String printState();
     String eval(String input);
-
 }
