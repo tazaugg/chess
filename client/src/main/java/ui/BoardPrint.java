@@ -37,8 +37,7 @@ public class BoardPrint {
         int startingPosition = team == ChessGame.TeamColor.WHITE ? 9 : 0;
 
         StringBuilder output = new StringBuilder();
-        output.append(RESET);//.append(SET_TEXT_BOLD);
-
+        output.append(RESET);
         for (int rank = startingPosition; rank <= 9 && rank >= 0; rank += direction) {
             output.append("\n");
             for (int file = startingPosition; file <= 9 && file >= 0; file += direction) {
