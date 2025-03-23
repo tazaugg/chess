@@ -114,7 +114,9 @@ public class ServerFacade {
     }
 
     private <T> T readResponse(HttpURLConnection http, Class<T> responseClass) throws Exception {
-        if (responseClass == null) return null;
+        if (responseClass == null){
+            return null;
+        }
         return new Gson().fromJson(new java.io.InputStreamReader(http.getInputStream()), responseClass);
     }
 }

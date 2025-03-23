@@ -25,7 +25,9 @@ public class PreLogClient implements Client {
     public String eval(String input) {
         try {
             var tokens = input.trim().toLowerCase().split("\\s+");
-            if (tokens.length == 0) return displayHelp();
+            if (tokens.length == 0){
+                return displayHelp();
+            }
 
             var command = tokens[0];
             var params = Arrays.copyOfRange(tokens, 1, tokens.length);
