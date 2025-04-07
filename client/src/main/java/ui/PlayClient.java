@@ -4,7 +4,7 @@ import chess.ChessGame;
 import model.GameData;
 import client.ServerFacade;
 
-import static ui.EscapeSequences.RESET;
+import static ui.EscapeSequences.*;
 
 public class PlayClient implements Client {
     private final String serverUrl;
@@ -37,7 +37,23 @@ public class PlayClient implements Client {
 
     @Override
     public String help() {
-        return "";
+        return String.format("""
+                     %s create <NAME> %s - a game
+                     %s list %s - games
+                     %s join <ID> [WHITE|BLACK] %s - a game
+                     %s observe <ID> %s - a game
+                     %s logout %s - when your done
+                     %s quit %s - playing chess
+                     %s help %s - with commands
+                 """,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN,
+                SET_TEXT_COLOR_RED, SET_TEXT_COLOR_GREEN
+        );
     }
 
     @Override
