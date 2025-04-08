@@ -24,25 +24,26 @@ public class WebSocketHandler {
     }
 
     @OnWebSocketMessage
-    public void onMessage(Session session, String message) throws IOException {
-        UserGameCommand command = new Gson().fromJson(message, UserGameCommand.class);
+    public void onMessage(Session session, String rawMessage) throws IOException {
+        Gson parser = new Gson();
+        UserGameCommand baseCommand = parser.fromJson(rawMessage, UserGameCommand.class);
 
         try {
-            if (!userService.verifyToken(command.getAuthToken())) {
+            if (!userService.verifyToken(baseCommand.getAuthToken())) {
                 sendError(session, "Error: Invalid Token");
                 return;
             }
 
-            if (gameService.getGame(command.getGameID()) == null) {
+            if (gameService.getGame(baseCommand.getGameID()) == null) {
                 sendError(session, "Error: Game does not exist");
                 return;
             }
 
-            switch (command.getCommandType()) {
-                case CONNECT -> handleConnect(session, message);
-                case LEAVE -> handleLeave(session, message);
-                case MAKE_MOVE -> handleMakeMove(session, message);
-                case RESIGN -> handleResign(session, message);
+            switch (baseCommand.getCommandType()) {
+                case CONNECT -> handleConnect(session, rawMessage);
+                case LEAVE -> handleLeave(session, rawMessage);
+                case MAKE_MOVE -> handleMakeMove(session, rawMessage);
+                case RESIGN -> handleResign(session, rawMessage);
             }
 
         } catch (RespExp | InvalidMoveException e) {
@@ -51,51 +52,54 @@ public class WebSocketHandler {
     }
 
     private void handleConnect(Session session, String message) {
-        ConnectCommand command = new Gson().fromJson(message, ConnectCommand.class);
-        // TODO: Implement game join + WebSocket connect logic
+        ConnectCommand connectData = new Gson().fromJson(message, ConnectCommand.class);
+        // TODO: Connect user to game and initialize board display
     }
 
     private void handleLeave(Session session, String message) {
-        LeaveCommand command = new Gson().fromJson(message, LeaveCommand.class);
-        // TODO: Implement game leave logic and update clients
+        LeaveCommand leaveData = new Gson().fromJson(message, LeaveCommand.class);
+        // TODO: Remove user from game and notify others
     }
 
     private void handleMakeMove(Session session, String message) throws InvalidMoveException, RespExp {
-        MakeMoveCommand command = new Gson().fromJson(message, MakeMoveCommand.class);
-        String authToken = command.getAuthToken();
-        GameData gameData = gameService.getGame(command.getGameID());
+        MakeMoveCommand moveData = new Gson().fromJson(message, MakeMoveCommand.class);
+        String token = moveData.getAuthToken();
+        int gameId = moveData.getGameID();
+        GameData currentGameData = gameService.getGame(gameId);
+        String currentUser = userService.getUsername(token);
+        ChessGame board = currentGameData.game();
 
-        String username = userService.getUsername(authToken);
-        ChessGame.TeamColor currentTurn = gameData.game().getTeamTurn();
+        ChessGame.TeamColor turn = board.getTeamTurn();
 
-        boolean isWhite = currentTurn == ChessGame.TeamColor.WHITE && username.equals(gameData.whiteUsername());
-        boolean isBlack = currentTurn == ChessGame.TeamColor.BLACK && username.equals(gameData.blackUsername());
+        boolean correctWhite = turn == ChessGame.TeamColor.WHITE && currentUser.equals(currentGameData.whiteUsername());
+        boolean correctBlack = turn == ChessGame.TeamColor.BLACK && currentUser.equals(currentGameData.blackUsername());
 
-        if (isWhite || isBlack) {
-            ChessGame updatedGame = gameData.game();
-            updatedGame.makeMove(command.retrieveMove());
+        if (correctWhite || correctBlack) {
+            board.makeMove(moveData.retrieveMove());
 
-            gameData = new GameData(
-                    gameData.gameID(),
-                    gameData.whiteUsername(),
-                    gameData.blackUsername(),
-                    gameData.gameName(),
-                    updatedGame
+            GameData updatedGame = new GameData(
+                    currentGameData.gameID(),
+                    currentGameData.whiteUsername(),
+                    currentGameData.blackUsername(),
+                    currentGameData.gameName(),
+                    board
             );
 
-            // TODO: Broadcast updated board and notification
+            gameService.updateGame(updatedGame);
+
+            // TODO: Broadcast update to all clients
         } else {
             throw new InvalidMoveException("Error: it is not your turn or you are not a player");
         }
     }
 
     private void handleResign(Session session, String message) {
-        ResignCommand command = new Gson().fromJson(message, ResignCommand.class);
-        // TODO: Mark game as resigned and notify all clients
+        ResignCommand resignData = new Gson().fromJson(message, ResignCommand.class);
+        // TODO: Handle resignation and notify clients
     }
 
-    private void sendError(Session session, String errorMessage) throws IOException {
-        ErrorMessage error = new ErrorMessage(errorMessage);
+    private void sendError(Session session, String errorMsg) throws IOException {
+        ErrorMessage error = new ErrorMessage(errorMsg);
         session.getRemote().sendString(new Gson().toJson(error, ErrorMessage.class));
     }
 }

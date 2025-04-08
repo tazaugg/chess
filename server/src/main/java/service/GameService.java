@@ -91,6 +91,15 @@ public class GameService {
         }
     }
 
+    public void updateGame(GameData updatedGame) throws RespExp {
+        try {
+            gameDAO.updateGame(updatedGame);
+        } catch (DataAccessException e) {
+            throw new RespExp(500, "Error: " + e.getMessage());
+        }
+    }
+
+
 
     public void clear() throws RespExp {
         try{
