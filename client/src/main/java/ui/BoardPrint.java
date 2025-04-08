@@ -6,7 +6,7 @@ import static ui.EscapeSequences.*;
 
 public class BoardPrint {
 
-    private static final String[] RANKS = {EMPTY , " h\u2003", " g\u2003", " f\u2003",
+    private static final String[] FILES = {EMPTY , " h\u2003", " g\u2003", " f\u2003",
             " e\u2003", " d\u2003", " c\u2003", " b\u2003", " a\u2003", EMPTY};
     private ChessGame game;
 
@@ -43,7 +43,7 @@ public class BoardPrint {
             for (int file = startingPosition; file <= 9 && file >= 0; file += direction) {
                 if (rank == 9 || rank == 0 || file == 9 || file == 0) {
                     output.append(SET_BG_COLOR_DARK_GREY).append(SET_TEXT_COLOR_MAGENTA).append(SET_TEXT_BOLD);
-                    output.append(rank == 9 || rank == 0 ? RANKS[file] :  " " + rank + "\u2003");
+                    output.append(rank == 9 || rank == 0 ? FILES[file] :  " " + rank + "\u2003");
                     output.append(RESET_TEXT_BOLD_FAINT);
                 } else {
                     if ((rank + file) % 2 == 0) {

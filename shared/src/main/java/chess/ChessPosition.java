@@ -67,4 +67,9 @@ public class ChessPosition {
                 ", col=" + col +
                 '}';
     }
+
+    public String prettyOutput() {
+        char file = (char) ('a' + col - 1); // converts 1–8 to 'a'–'h'
+        return "" + file + row;
+    }
 }

@@ -157,7 +157,8 @@ public class ChessGame {
 
         Collection<ChessMove> legalMoves = validMoves(startPosition);
         if (legalMoves == null || !legalMoves.contains(move)) {
-            throw new InvalidMoveException("Error: " + move + " is not a valid move.");
+            throw new InvalidMoveException("Error: From " + move.getStartPosition().prettyOutput()
+                    + " to " + move.getEndPosition().prettyOutput() + " is not a valid move.");
         }
 
         ChessBoard tempBoard = copyBoard();

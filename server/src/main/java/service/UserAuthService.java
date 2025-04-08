@@ -74,6 +74,17 @@ public class UserAuthService {
         }
     }
 
+    public String getUsername(String authToken) throws RespExp {
+        try {
+            AuthData authData = authDAO.getAuth(authToken);
+            if (authData == null) {
+                throw new RespExp(401, "Error: Invalid token");
+            }
+            return authData.username();
+        } catch (DataAccessException e) {
+            throw new RespExp(500, "Error: " + e.getMessage());
+        }
+    }
 
 
 
