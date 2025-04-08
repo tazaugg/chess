@@ -66,6 +66,14 @@ public class UserAuthService {
             throw new RespExp(500, "Error" + e.getMessage());
         }
     }
+    public boolean verifyToken(String authToken) throws RespExp {
+        try {
+            return authDAO.getAuth(authToken) != null;
+        } catch (DataAccessException e) {
+            throw new RespExp(500, "Error: " + e.getMessage());
+        }
+    }
+
 
 
 

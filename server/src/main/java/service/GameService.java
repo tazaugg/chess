@@ -83,6 +83,14 @@ public class GameService {
             throw new RespExp(500, "Error: " + e.getMessage());
         }
     }
+    public GameData getGame(int gameID) throws RespExp {
+        try {
+            return gameDAO.getGame(gameID);
+        } catch (DataAccessException e) {
+            throw new RespExp(500, "Error: " + e.getMessage());
+        }
+    }
+
 
     public void clear() throws RespExp {
         try{

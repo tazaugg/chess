@@ -151,11 +151,13 @@ public class ChessGame {
             throw new InvalidMoveException("No piece at the start position.");
         }
         if (piece.getTeamColor() != currentTeam) {
-            throw new InvalidMoveException("Piece is not in this team.");
+            String correctTeam = (currentTeam == TeamColor.WHITE) ? "white" : "black";
+            throw new InvalidMoveException("Error: It is the " + correctTeam + " team's turn.");
         }
+
         Collection<ChessMove> legalMoves = validMoves(startPosition);
         if (legalMoves == null || !legalMoves.contains(move)) {
-            throw new InvalidMoveException("No valid move.");
+            throw new InvalidMoveException("Error: " + move + " is not a valid move.");
         }
 
         ChessBoard tempBoard = copyBoard();
