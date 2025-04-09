@@ -30,7 +30,17 @@ public class WebSocketFacade extends Endpoint {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             this.session = container.connectToServer(this, endpoint);
 
-            this.session.addMessageHandler((MessageHandler.Whole<String>) this::handleIncomingMessage);
+            this.session.addMessageHandler(new MessageHandler.Whole<String> () {
+                @Override
+                public void onMessage(String message) {
+                    ServerMessage base = gson.fromJson(message, ServerMessage.class);
+                    switch (base.getServerMessageType()) {
+                        case NOTIFICATION -> notifier.handleNotif(gson.fromJson(message, NotificationMessage.class));
+                        case ERROR -> notifier.handleWarning(gson.fromJson(message, ErrorMessage.class));
+                        case LOAD_GAME -> notifier.loadGame(gson.fromJson(message, LoadGameMessage.class));
+                    }
+                }
+            });
         } catch (IOException | DeploymentException | URISyntaxException e) {
             throw new RespExp(500, "WebSocket connection failed: " + e.getMessage());
         }
@@ -40,14 +50,7 @@ public class WebSocketFacade extends Endpoint {
     public void onOpen(Session session, EndpointConfig config) {
     }
 
-    private void handleIncomingMessage(String message) {
-        ServerMessage base = gson.fromJson(message, ServerMessage.class);
-        switch (base.getServerMessageType()) {
-            case NOTIFICATION -> notifier.handleNotif(gson.fromJson(message, NotificationMessage.class));
-            case ERROR -> notifier.handleWarning(gson.fromJson(message, ErrorMessage.class));
-            case LOAD_GAME -> notifier.loadGame(gson.fromJson(message, LoadGameMessage.class));
-        }
-    }
+
 
     public void connectToGame(String authToken, int gameId) throws RespExp {
         sendCommand(new ConnectCommand(authToken, gameId));

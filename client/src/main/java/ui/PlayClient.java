@@ -33,7 +33,6 @@ public class PlayClient implements Client {
         this.authToken = authToken;
         this.gameID = gameData.gameID();
         this.team = gameData.blackUsername().equals(username) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-        boardPrint.updateGame(gameData.game());
         webSocket.connectToGame(authToken, gameID);
     }
 

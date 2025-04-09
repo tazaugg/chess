@@ -102,7 +102,7 @@ public class PostLogClient implements Client {
             server.joinGame(game.gameID(), color, authToken);
             return String.format("transition ;; %d ;; Joining the Game", game.gameID());
         } else {
-            return boardPrint.print(ChessGame.TeamColor.valueOf(color), game.game().getBoard());
+            return String.format("transition ;; %d ;; Joining the Game", game.gameID());
         }
     }
 
@@ -153,7 +153,7 @@ public class PostLogClient implements Client {
 
     @Override
     public Client transition(String token) throws RespExp {
-        int index = Integer.parseInt(token);
+        int index = Integer.parseInt(token.trim()) - 1;
         GameData game = games.get(index);
         return new PlayClient(serverUrl, server, notifier, username, authToken, game);
     }

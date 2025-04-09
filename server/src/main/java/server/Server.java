@@ -68,9 +68,13 @@ public class Server {
     }
 
     private void authFilter(Request req, Response res) throws RespExp {
-        String authHeader = req.headers("authorization");
-        if (authHeader == null || !userAuthService.verifyToken(authHeader)) {
-            throw new RespExp(401, "Error: unauthorized");
+        String path = req.pathInfo();
+        String method = req.requestMethod().toLowerCase();
+        if(!path.equals("/session") || !method.equals("post")) {
+            String authHeader = req.headers("authorization");
+            if (authHeader == null || !userAuthService.verifyToken(authHeader)) {
+                throw new RespExp(401, "Error: unauthorized");
+            }
         }
     }
 
