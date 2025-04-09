@@ -59,128 +59,135 @@ public class WebSocketHandler {
     }
 
     private void handleConnect(Session session, String message) throws RespExp, IOException {
-        ConnectCommand connect = gson.fromJson(message, ConnectCommand.class);
-        String user = userService.getUsername(connect.getAuthToken());
-        int gameId = connect.getGameID();
-        GameData game = gameService.getGame(gameId);
+        ConnectCommand command = gson.fromJson(message, ConnectCommand.class);
+        String username = userService.getUsername(command.getAuthToken());
+        int gameId = command.getGameID();
+        GameData gameData = gameService.getGame(gameId);
 
-        connectionManager.add(gameId, new Connection(session, user));
-        session.getRemote().sendString(gson.toJson(new LoadGameMessage(game.game())));
+        connectionManager.add(gameId, new Connection(session, username));
+        session.getRemote().sendString(gson.toJson(new LoadGameMessage(gameData.game())));
 
         String role = "an Observer";
-        if (user.equals(game.whiteUsername())) {
+        if (username.equals(gameData.whiteUsername())) {
             role = "White Player";
-        } else if (user.equals(game.blackUsername())) {
+        } else if (username.equals(gameData.blackUsername())) {
             role = "Black Player";
         }
 
-        NotificationMessage joined = new NotificationMessage(
-                String.format("%s joined the game as %s", user, role)
+        NotificationMessage note = new NotificationMessage(
+                String.format("%s joined the game as %s", username, role)
         );
-        connectionManager.broadcast(gameId, user, joined);
+        connectionManager.broadcast(gameId, username, note);
     }
 
     private void handleLeave(Session session, String message) throws RespExp, IOException {
-        LeaveCommand leave = gson.fromJson(message, LeaveCommand.class);
-        int gameId = leave.getGameID();
-        String user = userService.getUsername(leave.getAuthToken());
-        GameData game = gameService.getGame(gameId);
+        LeaveCommand command = gson.fromJson(message, LeaveCommand.class);
+        int gameId = command.getGameID();
+        String username = userService.getUsername(command.getAuthToken());
+        GameData gameData = gameService.getGame(gameId);
 
         GameData updated = new GameData(
                 gameId,
-                user.equals(game.whiteUsername()) ? null : game.whiteUsername(),
-                user.equals(game.blackUsername()) ? null : game.blackUsername(),
-                game.gameName(),
-                game.game()
+                username.equals(gameData.whiteUsername()) ? null : gameData.whiteUsername(),
+                username.equals(gameData.blackUsername()) ? null : gameData.blackUsername(),
+                gameData.gameName(),
+                gameData.game()
         );
         gameService.updateGame(updated);
-        connectionManager.remove(gameId, session, user);
+        connectionManager.remove(gameId, session, username);
 
-        NotificationMessage left = new NotificationMessage(String.format("%s has left the game", user));
-        connectionManager.broadcast(gameId, user, left);
+        NotificationMessage note = new NotificationMessage(String.format("%s has left the game", username));
+        connectionManager.broadcast(gameId, username, note);
     }
 
     private void handleMakeMove(Session session, String message) throws InvalidMoveException, RespExp, IOException {
-        MakeMoveCommand move = gson.fromJson(message, MakeMoveCommand.class);
-        String authToken = move.getAuthToken();
-        int gameId = move.getGameID();
-        GameData gameData = gameService.getGame(gameId);
-        String user = userService.getUsername(authToken);
+        MakeMoveCommand command = gson.fromJson(message, MakeMoveCommand.class);
+        String username = userService.getUsername(command.getAuthToken());
+        GameData gameData = gameService.getGame(command.getGameID());
         ChessGame board = gameData.game();
-        ChessGame.TeamColor currentTurn = board.getTeamTurn();
 
-        if (currentTurn == null) {
+        if (board.isGameOver()) {
             sendError(session, "Error: cannot make move, the game is over");
             return;
         }
 
-        boolean isWhiteTurn = currentTurn == ChessGame.TeamColor.WHITE && user.equals(gameData.whiteUsername());
-        boolean isBlackTurn = currentTurn == ChessGame.TeamColor.BLACK && user.equals(gameData.blackUsername());
+        ChessGame.TeamColor turn = board.getTeamTurn();
+        boolean correctTurn = (turn == ChessGame.TeamColor.WHITE && username.equals(gameData.whiteUsername())) ||
+                (turn == ChessGame.TeamColor.BLACK && username.equals(gameData.blackUsername()));
 
-        if (isWhiteTurn || isBlackTurn) {
-            ChessMove actualMove = move.retrieveMove();
-            board.makeMove(actualMove);
-
-            GameData updated = new GameData(
-                    gameData.gameID(),
-                    gameData.whiteUsername(),
-                    gameData.blackUsername(),
-                    gameData.gameName(),
-                    board
-            );
-            gameService.updateGame(updated);
-
-            connectionManager.broadcast(gameId, null, new LoadGameMessage(board));
-
-            NotificationMessage moveNote = new NotificationMessage(
-                    String.format("%s moved from %s to %s. It is now %s's turn.",
-                            user,
-                            actualMove.getStartPosition().prettyOutput(),
-                            actualMove.getEndPosition().prettyOutput(),
-                            board.getTeamTurn()
-                    )
-            );
-            connectionManager.broadcast(gameId, user, moveNote);
-
-            if (board.isInCheckmate(ChessGame.TeamColor.WHITE)) {
-                connectionManager.broadcast(gameId, null, new NotificationMessage(
-                        String.format("%s (White) is in checkmate. %s (Black) wins!",
-                                gameData.whiteUsername(), gameData.blackUsername())
-                ));
-            } else if (board.isInCheckmate(ChessGame.TeamColor.BLACK)) {
-                connectionManager.broadcast(gameId, null, new NotificationMessage(
-                        String.format("%s (Black) is in checkmate. %s (White) wins!",
-                                gameData.blackUsername(), gameData.whiteUsername())
-                ));
-            } else if (board.isInCheck(ChessGame.TeamColor.WHITE)) {
-                connectionManager.broadcast(gameId, null, new NotificationMessage(
-                        String.format("%s (White) is in check.", gameData.whiteUsername())
-                ));
-            } else if (board.isInCheck(ChessGame.TeamColor.BLACK)) {
-                connectionManager.broadcast(gameId, null, new NotificationMessage(
-                        String.format("%s (Black) is in check.", gameData.blackUsername())
-                ));
-            } else if (board.isInStalemate(board.getTeamTurn())) {
-                connectionManager.broadcast(gameId, null, new NotificationMessage(
-                        "Stalemate! No valid moves and no check. The game ends in a draw."
-                ));
-            }
-
-        } else {
+        if (!correctTurn) {
             throw new InvalidMoveException("Error: it is not your turn or you are not a player");
+        }
+
+        ChessMove move = command.retrieveMove();
+        board.makeMove(move);
+
+        GameData updated = new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                board
+        );
+        gameService.updateGame(updated);
+
+        connectionManager.broadcast(gameData.gameID(), null, new LoadGameMessage(board));
+
+        connectionManager.broadcast(gameData.gameID(), username, new NotificationMessage(
+                String.format("%s, moved from %s to %s. It is now %s's turn.",
+                        username,
+                        move.getStartPosition().prettyOutput(),
+                        move.getEndPosition().prettyOutput(),
+                        board.getTeamTurn())
+        ));
+
+        if (board.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            connectionManager.broadcast(gameData.gameID(), null, new NotificationMessage(
+                    String.format("%s (White) is in Checkmate. %s (Black) wins!",
+                            gameData.whiteUsername(), gameData.blackUsername())));
+        } else if (board.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            connectionManager.broadcast(gameData.gameID(), null, new NotificationMessage(
+                    String.format("%s (Black) is in Checkmate. %s (White) wins!",
+                            gameData.blackUsername(), gameData.whiteUsername())));
+        } else if (board.isInCheck(ChessGame.TeamColor.WHITE)) {
+            connectionManager.broadcast(gameData.gameID(), null, new NotificationMessage(
+                    String.format("%s (White) is in check.", gameData.whiteUsername())));
+        } else if (board.isInCheck(ChessGame.TeamColor.BLACK)) {
+            connectionManager.broadcast(gameData.gameID(), null, new NotificationMessage(
+                    String.format("%s (Black) is in check.", gameData.blackUsername())));
+        } else if (board.isInStalemate(board.getTeamTurn())) {
+            connectionManager.broadcast(gameData.gameID(), null, new NotificationMessage(
+                    "Stalemate! No legal moves and no check. Game ends in a draw."));
         }
     }
 
     private void handleResign(Session session, String message) throws RespExp, IOException {
-        ResignCommand resign = gson.fromJson(message, ResignCommand.class);
-        String user = userService.getUsername(resign.getAuthToken());
-        int gameId = resign.getGameID();
+        ResignCommand command = gson.fromJson(message, ResignCommand.class);
+        String username = userService.getUsername(command.getAuthToken());
+        GameData gameData = gameService.getGame(command.getGameID());
+        ChessGame board = gameData.game();
 
-        NotificationMessage resignMsg = new NotificationMessage(
-                String.format("%s has resigned. The game is now over.", user)
-        );
-        connectionManager.broadcast(gameId, null, resignMsg);
+        if (!username.equals(gameData.whiteUsername()) && !username.equals(gameData.blackUsername())) {
+            sendError(session, "Error: Only players can resign");
+            return;
+        }
 
+        if (board.isGameOver()) {
+            sendError(session, "Error: Game is already over");
+            return;
+        }
+
+        board.setGameOver(true);
+        gameService.updateGame(new GameData(
+                gameData.gameID(),
+                gameData.whiteUsername(),
+                gameData.blackUsername(),
+                gameData.gameName(),
+                board
+        ));
+
+        connectionManager.broadcast(command.getGameID(), null, new NotificationMessage(
+                String.format("%s has resigned. The game is over.", username)));
     }
 
     private void sendError(Session session, String errorMessage) throws IOException {

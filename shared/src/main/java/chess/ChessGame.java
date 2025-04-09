@@ -13,6 +13,8 @@ public class ChessGame {
     private ChessBoard board;
     private TeamColor currentTeam;
     private ChessMove lastMove;
+    private boolean gameOver = false;
+
     public ChessGame() {
         board = new ChessBoard();
         board.resetBoard();
@@ -381,6 +383,20 @@ public class ChessGame {
     public ChessBoard getBoard() {
         return board;
     }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    /**
+     * Ends or resumes the game.
+     * @param gameOver whether the game should be marked as over
+     */
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
+    }
+
+
 
     @Override
     public boolean equals(Object o) {
