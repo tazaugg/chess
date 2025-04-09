@@ -408,6 +408,10 @@ public class ChessGame {
                 Objects.equals(lastMove, chessGame.lastMove) && Objects.equals(movedPieces, chessGame.movedPieces);
     }
 
+    public ChessMove getLastMove() {
+        return lastMove;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(board, currentTeam, lastMove, movedPieces);

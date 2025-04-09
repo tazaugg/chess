@@ -38,7 +38,6 @@ public class WebSocketFacade extends Endpoint {
 
     @Override
     public void onOpen(Session session, EndpointConfig config) {
-        // Hook if needed
     }
 
     private void handleIncomingMessage(String message) {

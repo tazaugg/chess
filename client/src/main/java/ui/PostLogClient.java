@@ -17,6 +17,8 @@ public class PostLogClient implements Client {
     private final String authToken;
     private final String username;
     private final List<GameData> games;
+    private final BoardPrint boardPrint = new BoardPrint();
+
 
     public PostLogClient(String serverUrl, ServerFacade server, NotifHandler notifier, String username, String authToken) {
         this.serverUrl = serverUrl;
@@ -50,7 +52,6 @@ public class PostLogClient implements Client {
     @Override
     public String loadGame(ChessGame game) {
         return "";
-
     }
 
     public String quit() {
@@ -99,17 +100,9 @@ public class PostLogClient implements Client {
         if (("WHITE".equals(color) && !username.equals(game.whiteUsername())) ||
                 ("BLACK".equals(color) && !username.equals(game.blackUsername()))) {
             server.joinGame(game.gameID(), color, authToken);
-            return String.format("""
-                    Successfully joined: %s. %s However, %s the Gameplay aspect has yet to be implemented.
-                    Instead enjoy this lovely recreation of the board, from the perspective you would have in game.
-                    %s
-                    """,
-                    game.gameName(),
-                    SET_TEXT_ITALIC,
-                    RESET_TEXT_ITALIC,
-                    BoardPrint.print(ChessGame.TeamColor.valueOf(color), game.game().getBoard()));
+            return String.format("transition ;; %d ;; Joining the Game", game.gameID());
         } else {
-            return BoardPrint.print(ChessGame.TeamColor.valueOf(color), game.game().getBoard());
+            return boardPrint.print(ChessGame.TeamColor.valueOf(color), game.game().getBoard());
         }
     }
 
@@ -128,32 +121,34 @@ public class PostLogClient implements Client {
     public String observe(String... args) throws RespExp {
         if (args.length < 1) throw new RespExp(400, "Expected: <ID>");
         GameData game = validateGame(args[0]);
-        return String.format("Observing: %s\n%s", game.gameName(), BoardPrint.print(game.game().getBoard()));
+        boardPrint.updateGame(game.game());
+        return String.format("Observing: %s\n%s", game.gameName(), boardPrint.print(ChessGame.TeamColor.WHITE));
+
     }
 
     public String logout() throws RespExp {
         server.logout(authToken);
-        return "transition ;; Logged out successfully.";
+        return "transition ;; Good by";
     }
 
     @Override
     public String help() {
         return String.format("""
-                %s create <NAME> %s - Create a new game
-                %s list %s - Display available games
-                %s join <ID> [WHITE|BLACK] %s - Join an existing game
-                %s observe <ID> %s - Watch an ongoing game
-                %s logout %s - Log out from your account
-                %s quit %s - Exit the chess client
-                %s help %s - View available commands
-                """,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA);
+                %s create <NAME> %s - a game
+                %s list %s - games
+                %s join <ID> [WHITE|BLACK] %s - a game
+                %s observe <ID> %s - a game
+                %s logout %s - when your done
+                %s quit %s - playing chess
+                %s help %s - with commands
+            """,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW);
     }
 
     @Override
