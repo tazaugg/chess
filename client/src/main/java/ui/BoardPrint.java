@@ -10,8 +10,8 @@ public class BoardPrint {
             " e\u2003", " d\u2003", " c\u2003", " b\u2003", " a\u2003", EMPTY};
     private ChessGame game;
 
-    public BoardPrint(ChessGame game) {
-        this.game = game;
+    public BoardPrint() {
+        this.game = new ChessGame();
     }
 
     public void updateGame(ChessGame game) {

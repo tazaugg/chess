@@ -1,30 +1,38 @@
 package ui;
 
 import chess.ChessGame;
-import model.GameData;
 import client.ServerFacade;
+import client.websocket.NotifHandler;
+import client.websocket.WebSocketFacade;
+import exceptions.RespExp;
+import model.GameData;
 
 import static ui.EscapeSequences.*;
 
 public class PlayClient implements Client {
     private final String serverUrl;
     private final ServerFacade server;
+    private final NotifHandler notifier;
+    private final WebSocketFacade webSocket;
     private final String username;
     private final String authToken;
-    private ChessGame game;
-    private final ChessGame.TeamColor team;
     private final int gameID;
-    private final BoardPrint boardPrint;
+    private final ChessGame.TeamColor team;
+    private final BoardPrint boardPrint = new BoardPrint();
+    private ChessGame game;
 
-    PlayClient(String serverUrl, ServerFacade server, String username, String authToken, GameData gameData) {
+    public PlayClient(String serverUrl, ServerFacade server, NotifHandler notifier,
+                      String username, String authToken, GameData gameData) throws RespExp {
         this.serverUrl = serverUrl;
         this.server = server;
+        this.notifier = notifier;
+        this.webSocket = new WebSocketFacade(serverUrl, notifier);
         this.username = username;
         this.authToken = authToken;
-        this.game = gameData.game();
         this.gameID = gameData.gameID();
+        this.game = gameData.game();
         this.team = gameData.blackUsername().equals(username) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
-        this.boardPrint = new BoardPrint(gameData.game());
+        webSocket.connectToGame(authToken, gameID);
     }
 
     @Override
@@ -33,6 +41,12 @@ public class PlayClient implements Client {
             return "transition;; How did you get here? You don't even have a game saved.";
         }
         return "transition;; How did you get here? This isn't even implemented yet.";
+    }
+
+    @Override
+    public String loadGame(ChessGame game) {
+        boardPrint.updateGame(game);
+        return boardPrint.print(team);
     }
 
     @Override
@@ -63,7 +77,7 @@ public class PlayClient implements Client {
 
     @Override
     public Client transition() {
-        return new PostLogClient(serverUrl, server, username, authToken);
+        return new PostLogClient(serverUrl, server, notifier, username, authToken);
     }
 
     @Override
