@@ -65,9 +65,7 @@ public class WebSocketHandler {
         GameData game = gameService.getGame(gameId);
 
         connectionManager.add(gameId, new Connection(session, user));
-
-        LoadGameMessage loadGame = new LoadGameMessage(game.game());
-        session.getRemote().sendString(gson.toJson(loadGame));
+        session.getRemote().sendString(gson.toJson(new LoadGameMessage(game.game())));
 
         String role = "an Observer";
         if (user.equals(game.whiteUsername())) {
@@ -82,9 +80,24 @@ public class WebSocketHandler {
         connectionManager.broadcast(gameId, user, joined);
     }
 
-    private void handleLeave(Session session, String message) {
+    private void handleLeave(Session session, String message) throws RespExp, IOException {
         LeaveCommand leave = gson.fromJson(message, LeaveCommand.class);
-        // TODO: Remove connection and notify others
+        int gameId = leave.getGameID();
+        String user = userService.getUsername(leave.getAuthToken());
+        GameData game = gameService.getGame(gameId);
+
+        GameData updated = new GameData(
+                gameId,
+                user.equals(game.whiteUsername()) ? null : game.whiteUsername(),
+                user.equals(game.blackUsername()) ? null : game.blackUsername(),
+                game.gameName(),
+                game.game()
+        );
+        gameService.updateGame(updated);
+        connectionManager.remove(gameId, session, user);
+
+        NotificationMessage left = new NotificationMessage(String.format("%s has left the game", user));
+        connectionManager.broadcast(gameId, user, left);
     }
 
     private void handleMakeMove(Session session, String message) throws InvalidMoveException, RespExp, IOException {
@@ -95,6 +108,11 @@ public class WebSocketHandler {
         String user = userService.getUsername(authToken);
         ChessGame board = gameData.game();
         ChessGame.TeamColor currentTurn = board.getTeamTurn();
+
+        if (currentTurn == null) {
+            sendError(session, "Error: cannot make move, the game is over");
+            return;
+        }
 
         boolean isWhiteTurn = currentTurn == ChessGame.TeamColor.WHITE && user.equals(gameData.whiteUsername());
         boolean isBlackTurn = currentTurn == ChessGame.TeamColor.BLACK && user.equals(gameData.blackUsername());
@@ -134,8 +152,7 @@ public class WebSocketHandler {
                         String.format("%s (Black) is in checkmate. %s (White) wins!",
                                 gameData.blackUsername(), gameData.whiteUsername())
                 ));
-            }
-            else if (board.isInCheck(ChessGame.TeamColor.WHITE)) {
+            } else if (board.isInCheck(ChessGame.TeamColor.WHITE)) {
                 connectionManager.broadcast(gameId, null, new NotificationMessage(
                         String.format("%s (White) is in check.", gameData.whiteUsername())
                 ));
@@ -143,8 +160,7 @@ public class WebSocketHandler {
                 connectionManager.broadcast(gameId, null, new NotificationMessage(
                         String.format("%s (Black) is in check.", gameData.blackUsername())
                 ));
-            }
-            else if (board.isInStalemate(board.getTeamTurn())) {
+            } else if (board.isInStalemate(board.getTeamTurn())) {
                 connectionManager.broadcast(gameId, null, new NotificationMessage(
                         "Stalemate! No valid moves and no check. The game ends in a draw."
                 ));
@@ -155,9 +171,16 @@ public class WebSocketHandler {
         }
     }
 
-    private void handleResign(Session session, String message) {
+    private void handleResign(Session session, String message) throws RespExp, IOException {
         ResignCommand resign = gson.fromJson(message, ResignCommand.class);
-        // TODO: Mark the game as resigned and notify all players
+        String user = userService.getUsername(resign.getAuthToken());
+        int gameId = resign.getGameID();
+
+        NotificationMessage resignMsg = new NotificationMessage(
+                String.format("%s has resigned. The game is now over.", user)
+        );
+        connectionManager.broadcast(gameId, null, resignMsg);
+
     }
 
     private void sendError(Session session, String errorMessage) throws IOException {

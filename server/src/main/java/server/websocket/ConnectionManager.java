@@ -29,6 +29,21 @@ public class ConnectionManager {
         }
     }
 
+    public void remove(int gameID, Session session, String username) {
+        List<Connection> group = sessionsByGame.get(gameID);
+        if (group != null) {
+            for (Connection connection : group) {
+                if (connection.getSession().equals(session) && connection.getUserName().equals(username)) {
+                    group.remove(connection);
+                    break;
+                }
+            }
+            if (group.isEmpty()) {
+                sessionsByGame.remove(gameID);
+            }
+        }
+    }
+
     public List<Connection> getAll(int gameID) {
         return sessionsByGame.getOrDefault(gameID, Collections.emptyList());
     }
@@ -37,16 +52,16 @@ public class ConnectionManager {
         List<Connection> participants = sessionsByGame.getOrDefault(gameID, Collections.emptyList());
         List<Connection> toRemove = new ArrayList<>();
 
-        for (Connection participant : participants) {
-            Session s = participant.getSession();
-            String user = participant.getUserName();
+        for (Connection client : participants) {
+            Session session = client.getSession();
+            String username = client.getUserName();
 
-            if (s.isOpen()) {
-                if (!user.equals(excludedUsername)) {
-                    participant.sendMessage(serializer.toJson(message));
+            if (session.isOpen()) {
+                if (!username.equals(excludedUsername)) {
+                    client.sendMessage(serializer.toJson(message));
                 }
             } else {
-                toRemove.add(participant);
+                toRemove.add(client);
             }
         }
 
