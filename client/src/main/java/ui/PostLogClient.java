@@ -80,7 +80,7 @@ public class PostLogClient implements Client {
         for (int i = 0; i < games.size(); i++) {
             GameData game = games.get(i);
             sb.append(String.format("| %s%-6d %s| %-11s | %s%-15s %s| %s%-15s %s|%n",
-                    SET_TEXT_COLOR_YELLOW, i + 1, SET_TEXT_COLOR_GREEN,
+                    SET_TEXT_COLOR_MAGENTA, i + 1, SET_TEXT_COLOR_GREEN,
                     Optional.ofNullable(game.gameName()).orElse("N/A"),
                     SET_TEXT_COLOR_WHITE, Optional.ofNullable(game.whiteUsername()).orElse("none"),
                     SET_TEXT_COLOR_GREEN, SET_TEXT_COLOR_BLUE, Optional.ofNullable(game.blackUsername()).orElse("none"),
@@ -128,7 +128,7 @@ public class PostLogClient implements Client {
 
     public String logout() throws RespExp {
         server.logout(authToken);
-        return "transition ;; Good by";
+        return "transition ;; Good bye";
     }
 
     @Override
@@ -142,13 +142,13 @@ public class PostLogClient implements Client {
                 %s quit %s - playing chess
                 %s help %s - with commands
             """,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW,
-                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_YELLOW);
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA,
+                SET_TEXT_COLOR_BLUE, SET_TEXT_COLOR_MAGENTA);
     }
 
     @Override
