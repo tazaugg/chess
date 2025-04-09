@@ -22,17 +22,19 @@ public class PlayClient implements Client {
     private final int gameID;
     private final ChessGame.TeamColor team;
     private final BoardPrint boardPrint = new BoardPrint();
+    private final Boolean isPlayer;
 
     public PlayClient(String serverUrl, ServerFacade server, NotifHandler notifier,
-                      String username, String authToken, GameData gameData) throws RespExp {
+                      String username, String authToken, GameData gameData, String asType) throws RespExp {
         this.serverUrl = serverUrl;
         this.server = server;
         this.notifier = notifier;
-        this.webSocket = new WebSocketFacade(serverUrl, notifier);
         this.username = username;
         this.authToken = authToken;
         this.gameID = gameData.gameID();
-        this.team = gameData.blackUsername().equals(username) ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        this.team = asType.equals("BLACK") ? ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        this.isPlayer = !asType.equalsIgnoreCase("observer");
+        this.webSocket = new WebSocketFacade(serverUrl, notifier);
         webSocket.connectToGame(authToken, gameID);
     }
 
@@ -152,6 +154,6 @@ public class PlayClient implements Client {
 
     @Override
     public String printState() {
-        return boardPrint.print(team) + "\n" + RESET + "[IN-GAME]";
+        return  "[IN-GAME]";
     }
 }

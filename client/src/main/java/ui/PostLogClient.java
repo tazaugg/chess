@@ -62,7 +62,9 @@ public class PostLogClient implements Client {
     }
 
     public String create(String... args) throws RespExp {
-        if (args.length < 1) throw new RespExp(400, "Expected: <NAME>");
+        if (args.length < 1){
+            throw new RespExp(400, "Expected: <NAME>");
+        }
         server.createGame(args[0], authToken);
         return "Successfully created game";
     }
@@ -91,38 +93,51 @@ public class PostLogClient implements Client {
     }
 
     public String join(String... args) throws RespExp {
-        if (args.length < 2) throw new RespExp(400, "Expected: <ID> [WHITE|BLACK]");
+        if (args.length < 2) {
+            throw new RespExp(400, "Expected: <ID> [WHITE|BLACK]");
+        }
         GameData game = validateGame(args[0]);
         String color = args[1].trim().toUpperCase();
         Set<String> colors = Set.of("WHITE", "BLACK");
-        if (!colors.contains(color)) throw new RespExp(400, "Expected: [WHITE|BLACK]");
+        if (!colors.contains(color)){
+            throw new RespExp(400, "Expected: [WHITE|BLACK]");
+        }
 
         if (("WHITE".equals(color) && !username.equals(game.whiteUsername())) ||
                 ("BLACK".equals(color) && !username.equals(game.blackUsername()))) {
             server.joinGame(game.gameID(), color, authToken);
-            return String.format("transition ;; %d ;; Joining the Game", game.gameID());
+            return String.format("transition ;; %d, %s ;; Joining the Game", game.gameID(),
+                    args[1].trim().toUpperCase());
         } else {
-            return String.format("transition ;; %d ;; Joining the Game", game.gameID());
+            return String.format("transition ;; %d, %s ;; Joining the Game", game.gameID(),
+                    args[1].trim().toUpperCase());
         }
     }
 
     private GameData validateGame(String id) throws RespExp {
         try {
             int index = Integer.parseInt(id) - 1;
-            if (games.isEmpty()) throw new RespExp(400, "Please use list first");
-            if (index < 0 || index >= games.size())
+            if (games.isEmpty()){
+                throw new RespExp(400, "Please use list first");
+            }
+            if (index < 0 || index >= games.size()) {
                 throw new RespExp(400, "Invalid game ID, use list to verify");
+
+            }
             return games.get(index);
+
         } catch (NumberFormatException e) {
             throw new RespExp(400, "<ID> must be a number");
         }
     }
 
     public String observe(String... args) throws RespExp {
-        if (args.length < 1) throw new RespExp(400, "Expected: <ID>");
+        if (args.length < 1){
+            throw new RespExp(400, "Expected: <ID>");
+        }
         GameData game = validateGame(args[0]);
         boardPrint.updateGame(game.game());
-        return String.format("Observing: %s\n%s", game.gameName(), boardPrint.print(ChessGame.TeamColor.WHITE));
+        return String.format("transition ;; %s, observer ;; Observing: %s", args[0] , game.gameName());
 
     }
 
@@ -153,9 +168,11 @@ public class PostLogClient implements Client {
 
     @Override
     public Client transition(String token) throws RespExp {
-        int index = Integer.parseInt(token.trim()) - 1;
+        String[] parts = token.split(",");
+        int index = Integer.parseInt(parts[0].trim()) - 1;
+
         GameData game = games.get(index);
-        return new PlayClient(serverUrl, server, notifier, username, authToken, game);
+        return new PlayClient(serverUrl, server, notifier, username, authToken, game, parts[1].trim());
     }
 
     @Override

@@ -23,7 +23,7 @@ public class WebSocketHandler {
     private final GameService gameService;
     private final UserAuthService userService;
     private final ConnectionManager connectionManager = new ConnectionManager();
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public WebSocketHandler(GameService gameService, UserAuthService userService) {
         this.gameService = gameService;
@@ -32,7 +32,7 @@ public class WebSocketHandler {
 
     @OnWebSocketMessage
     public void onMessage(Session session, String rawMessage) throws IOException {
-        UserGameCommand command = gson.fromJson(rawMessage, UserGameCommand.class);
+        UserGameCommand command = GSON.fromJson(rawMessage, UserGameCommand.class);
 
         try {
             if (!userService.verifyToken(command.getAuthToken())) {
@@ -59,13 +59,13 @@ public class WebSocketHandler {
     }
 
     private void handleConnect(Session session, String message) throws RespExp, IOException {
-        ConnectCommand command = gson.fromJson(message, ConnectCommand.class);
+        ConnectCommand command = GSON.fromJson(message, ConnectCommand.class);
         String username = userService.getUsername(command.getAuthToken());
         int gameId = command.getGameID();
         GameData gameData = gameService.getGame(gameId);
 
         connectionManager.add(gameId, new Connection(session, username));
-        session.getRemote().sendString(gson.toJson(new LoadGameMessage(gameData.game())));
+        session.getRemote().sendString(GSON.toJson(new LoadGameMessage(gameData.game())));
 
         String role = "an Observer";
         if (username.equals(gameData.whiteUsername())) {
@@ -81,7 +81,7 @@ public class WebSocketHandler {
     }
 
     private void handleLeave(Session session, String message) throws RespExp, IOException {
-        LeaveCommand command = gson.fromJson(message, LeaveCommand.class);
+        LeaveCommand command = GSON.fromJson(message, LeaveCommand.class);
         int gameId = command.getGameID();
         String username = userService.getUsername(command.getAuthToken());
         GameData gameData = gameService.getGame(gameId);
@@ -101,7 +101,7 @@ public class WebSocketHandler {
     }
 
     private void handleMakeMove(Session session, String message) throws InvalidMoveException, RespExp, IOException {
-        MakeMoveCommand command = gson.fromJson(message, MakeMoveCommand.class);
+        MakeMoveCommand command = GSON.fromJson(message, MakeMoveCommand.class);
         String username = userService.getUsername(command.getAuthToken());
         GameData gameData = gameService.getGame(command.getGameID());
         ChessGame board = gameData.game();
@@ -162,7 +162,7 @@ public class WebSocketHandler {
     }
 
     private void handleResign(Session session, String message) throws RespExp, IOException {
-        ResignCommand command = gson.fromJson(message, ResignCommand.class);
+        ResignCommand command = GSON.fromJson(message, ResignCommand.class);
         String username = userService.getUsername(command.getAuthToken());
         GameData gameData = gameService.getGame(command.getGameID());
         ChessGame board = gameData.game();
@@ -192,6 +192,6 @@ public class WebSocketHandler {
 
     private void sendError(Session session, String errorMessage) throws IOException {
         ErrorMessage error = new ErrorMessage(errorMessage);
-        session.getRemote().sendString(gson.toJson(error, ErrorMessage.class));
+        session.getRemote().sendString(GSON.toJson(error, ErrorMessage.class));
     }
 }

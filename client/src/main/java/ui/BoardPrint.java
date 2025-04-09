@@ -99,7 +99,9 @@ public class BoardPrint {
     }
 
     private static String displayPiece(ChessPiece piece) {
-        if (piece == null) return EMPTY;
+        if (piece == null) {
+            return EMPTY;
+        }
 
         return switch (piece.getPieceType()) {
             case KING -> piece.getTeamColor() == ChessGame.TeamColor.WHITE ?

@@ -44,9 +44,7 @@ public class ConnectionManager {
         }
     }
 
-    public List<Connection> getAll(int gameID) {
-        return sessionsByGame.getOrDefault(gameID, Collections.emptyList());
-    }
+
 
     public void broadcast(int gameID, String excludedUsername, ServerMessage message) throws IOException {
         List<Connection> participants = sessionsByGame.getOrDefault(gameID, Collections.emptyList());

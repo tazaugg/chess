@@ -20,7 +20,7 @@ import java.net.URISyntaxException;
 public class WebSocketFacade extends Endpoint {
     private Session session;
     private final NotifHandler notifier;
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     public WebSocketFacade(String baseUrl, NotifHandler notifier) throws RespExp {
         this.notifier = notifier;
@@ -33,11 +33,11 @@ public class WebSocketFacade extends Endpoint {
             this.session.addMessageHandler(new MessageHandler.Whole<String> () {
                 @Override
                 public void onMessage(String message) {
-                    ServerMessage base = gson.fromJson(message, ServerMessage.class);
+                    ServerMessage base = GSON.fromJson(message, ServerMessage.class);
                     switch (base.getServerMessageType()) {
-                        case NOTIFICATION -> notifier.handleNotif(gson.fromJson(message, NotificationMessage.class));
-                        case ERROR -> notifier.handleWarning(gson.fromJson(message, ErrorMessage.class));
-                        case LOAD_GAME -> notifier.loadGame(gson.fromJson(message, LoadGameMessage.class));
+                        case NOTIFICATION -> notifier.handleNotif(GSON.fromJson(message, NotificationMessage.class));
+                        case ERROR -> notifier.handleWarning(GSON.fromJson(message, ErrorMessage.class));
+                        case LOAD_GAME -> notifier.loadGame(GSON.fromJson(message, LoadGameMessage.class));
                     }
                 }
             });
@@ -70,7 +70,7 @@ public class WebSocketFacade extends Endpoint {
 
     private void sendCommand(Object command) throws RespExp {
         try {
-            String json = gson.toJson(command);
+            String json = GSON.toJson(command);
             session.getBasicRemote().sendText(json);
         } catch (IOException e) {
             throw new RespExp(500, "Failed to send command: " + e.getMessage());
