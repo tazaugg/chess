@@ -2,88 +2,91 @@ package server;
 
 import dataaccess.*;
 import exceptions.RespExp;
-import spark.*;
+import model.AuthData;
+import server.websocket.WebSocketHandler;
 import service.*;
+import spark.*;
+
+import static spark.Spark.halt;
 
 public class Server {
 
-    UserDAO userDAO;
-    AuthDAO authDAO;
-    GameDAO gameDAO;
-
-    UserAuthService userAuthService;
-    GameService gameService;
-
-    UserAuthHandler userAuthHandler;
-    GameHandler gameHandler;
+    private final ClearService clearService;
+    private final UserAuthService userAuthService;
+    private final GameService gameService;
+    private final UserAuthHandler userAuthHandler;
+    private final GameHandler gameHandler;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
+        UserDAO userDAO = new MemUserDAO();
+        AuthDAO authDAO = new MemAuthDAO();
+        GameDAO gameDAO = new MemGameDAO();
 
-        userDAO = new MemUserDAO();
-        authDAO = new MemAuthDAO();
-        gameDAO = new MemGameDAO();
-
-        try{
+        try {
             userDAO = new SQLUserDAO();
             authDAO = new SQLAuthDAO();
             gameDAO = new SQLGameDAO();
-        }
-        catch(DataAccessException e){
+        } catch (DataAccessException e) {
             userDAO = new MemUserDAO();
             authDAO = new MemAuthDAO();
             gameDAO = new MemGameDAO();
         }
 
         userAuthService = new UserAuthService(userDAO, authDAO);
-        gameService = new GameService(gameDAO,authDAO);
+        gameService = new GameService(gameDAO, authDAO);
+        clearService = new ClearService(authDAO, userDAO, gameDAO);
 
         userAuthHandler = new UserAuthHandler(userAuthService);
         gameHandler = new GameHandler(gameService);
-
+        webSocketHandler = new WebSocketHandler(gameService, userAuthService);
     }
 
     public int run(int desiredPort) {
         Spark.port(desiredPort);
-
         Spark.staticFiles.location("web");
 
-        // Register your endpoints and handle exceptions here.
-        Spark.post("/user", userAuthHandler::register);
-        Spark.delete("/db", this::clear);
+        Spark.webSocket("/ws", webSocketHandler);
 
+        Spark.before("/session", this::authFilter);
+        Spark.before("/game", this::authFilter);
+
+        Spark.post("/user", userAuthHandler::register);
         Spark.post("/session", userAuthHandler::login);
         Spark.delete("/session", userAuthHandler::logout);
 
         Spark.get("/game", gameHandler::listGames);
         Spark.post("/game", gameHandler::createGame);
         Spark.put("/game", gameHandler::joinGame);
+        Spark.delete("/db", this::clear);
 
         Spark.exception(RespExp.class, this::exceptionHandler);
 
-        //This line initializes the server and can be removed once you have a functioning endpoint
         Spark.init();
-
         Spark.awaitInitialization();
         return Spark.port();
     }
 
-    private void exceptionHandler(RespExp exp, Request req, Response res) {
-        res.status(exp.statusCode());
-        res.body(exp.toJson());
+    private void authFilter(Request req, Response res) throws RespExp {
+        String authHeader = req.headers("authorization");
+        if (authHeader == null || !userAuthService.verifyToken(authHeader)) {
+            throw new RespExp(401, "Error: unauthorized");
+        }
+    }
+
+    private void exceptionHandler(RespExp ex, Request req, Response res) {
+        res.status(ex.statusCode());
+        res.body(ex.toJson());
+    }
+
+    private Object clear(Request req, Response res) throws RespExp {
+        clearService.clear();
+        res.status(200);
+        return "";
     }
 
     public void stop() {
         Spark.stop();
         Spark.awaitStop();
-    }
-    private Object clear(Request req, Response resp) throws RespExp {
-        userAuthService.clear();
-        gameService.clear();
-
-        resp.status(200);
-        return "";
-
-
-
     }
 }
